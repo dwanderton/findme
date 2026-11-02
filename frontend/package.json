@@ -1,0 +1,27 @@
+{
+  "name": "findme-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "gen-types": "openapi-typescript ../openapi.yaml -o src/lib/api-types.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "exifr": "latest",
+    "fflate": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "openapi-typescript": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}
