@@ -2,13 +2,12 @@ openapi: 3.1.0
 info:
   title: findMe API
   version: 1.0.0
-  description: >
-    Find yourself in a photo album. Face matching on Runpod serverless GPUs,
-    matched photos enriched with place (Google Geocoding), weather
-    (Open-Meteo), camera EXIF, and VLM captions/tags/story (Qwen2.5-VL on
-    Runpod). Browser talks to the Next.js proxy; photo-batch uploads go direct
-    to the flash upload endpoint.
+  description: 'Find yourself in a photo album. Face matching on Runpod serverless GPUs, matched photos
+    enriched with place (Google Geocoding), weather (Open-Meteo), camera EXIF, and VLM captions/tags/story
+    (Qwen2.5-VL on Runpod). Browser talks to the Next.js proxy; photo-batch uploads go direct to the flash
+    upload endpoint.
 
+    '
 paths:
   /api/albums:
     post:
@@ -19,124 +18,165 @@ paths:
           application/json:
             schema:
               type: object
-              required: [photoCount]
+              required:
+              - photoCount
               properties:
-                photoCount: { type: integer, minimum: 1, maximum: 5000 }
+                photoCount:
+                  type: integer
+                  minimum: 1
+                  maximum: 5000
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
                 type: object
-                required: [albumId, ownerToken, upload]
+                required:
+                - albumId
+                - ownerToken
+                - upload
                 properties:
-                  albumId: { $ref: "#/components/schemas/Uuid" }
-                  ownerToken: { $ref: "#/components/schemas/Uuid" }
+                  albumId:
+                    $ref: '#/components/schemas/Uuid'
+                  ownerToken:
+                    $ref: '#/components/schemas/Uuid'
                   upload:
                     type: object
-                    required: [url, batchMaxBytes, batchMaxPhotos]
+                    required:
+                    - url
+                    - batchMaxBytes
+                    - batchMaxPhotos
                     properties:
-                      url: { type: string }
-                      batchMaxBytes: { type: integer }
-                      batchMaxPhotos: { type: integer }
-        "400": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
-
+                      url:
+                        type: string
+                      batchMaxBytes:
+                        type: integer
+                      batchMaxPhotos:
+                        type: integer
+          description: created
+        '400':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
   /upload:
     post:
       operationId: uploadBatch
-      description: >
-        Direct to the flash LB upload endpoint, not the proxy. Batched
-        multipart, each photo part paired with an EXIF JSON part named
-        exif_{n}. Caps 8 photos / 8 MB per request.
+      description: 'Direct to the flash LB upload endpoint, not the proxy. Batched multipart, each photo
+        part paired with an EXIF JSON part named exif_{n}. Caps 8 photos / 8 MB per request.
+
+        '
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [albumId]
+              required:
+              - albumId
               properties:
-                albumId: { $ref: "#/components/schemas/Uuid" }
+                albumId:
+                  $ref: '#/components/schemas/Uuid'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 type: object
-                required: [stored]
+                required:
+                - stored
                 properties:
-                  stored: { type: integer }
+                  stored:
+                    type: integer
                   rejected:
                     type: array
                     items:
                       type: object
                       properties:
-                        name: { type: string }
-                        reason: { type: string }
-        "400": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-        "413": { $ref: "#/components/responses/Error" }
-
+                        name:
+                          type: string
+                        reason:
+                          type: string
+          description: ok
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '413':
+          $ref: '#/components/responses/Error'
   /api/albums/{albumId}/commit:
     post:
       operationId: commitAlbum
-      parameters: [{ $ref: "#/components/parameters/AlbumId" }]
+      parameters:
+      - $ref: '#/components/parameters/AlbumId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [uploaded]
+              required:
+              - uploaded
               properties:
-                uploaded: { type: integer }
+                uploaded:
+                  type: integer
       responses:
-        "202":
+        '202':
           content:
             application/json:
               schema:
                 type: object
-                required: [albumId, accepted, rejected]
+                required:
+                - albumId
+                - accepted
+                - rejected
                 properties:
-                  albumId: { $ref: "#/components/schemas/Uuid" }
-                  accepted: { type: integer }
+                  albumId:
+                    $ref: '#/components/schemas/Uuid'
+                  accepted:
+                    type: integer
                   rejected:
                     type: array
                     items:
                       type: object
                       properties:
-                        name: { type: string }
-                        reason: { type: string }
-        "404": { $ref: "#/components/responses/Error" }
-
+                        name:
+                          type: string
+                        reason:
+                          type: string
+          description: accepted
+        '404':
+          $ref: '#/components/responses/Error'
   /api/albums/{albumId}/status:
     get:
       operationId: albumStatus
-      parameters: [{ $ref: "#/components/parameters/AlbumId" }]
+      parameters:
+      - $ref: '#/components/parameters/AlbumId'
       responses:
-        "200":
+        '200':
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Status" }
-        "404": { $ref: "#/components/responses/Error" }
-
+              schema:
+                $ref: '#/components/schemas/Status'
+          description: ok
+        '404':
+          $ref: '#/components/responses/Error'
   /api/albums/{albumId}/events:
     get:
       operationId: albumEvents
-      description: >
-        SSE stream relayed by the proxy, which polls upstream status at 1s
-        while a client is connected. Events: progress, stage, done, failed.
-        id is a monotonic sequence; Last-Event-ID resumes with a fresh
-        snapshot. Clients downgrade to 2s status polling after two failures.
-      parameters: [{ $ref: "#/components/parameters/AlbumId" }]
+      description: 'SSE stream relayed by the proxy, which polls upstream status at 1s while a client
+        is connected. Events: progress, stage, done, failed. id is a monotonic sequence; Last-Event-ID
+        resumes with a fresh snapshot. Clients downgrade to 2s status polling after two failures.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/AlbumId'
       responses:
-        "200":
+        '200':
           description: text/event-stream of Progress events
           content:
             text/event-stream:
-              schema: { type: string }
-
+              schema:
+                type: string
   /api/enroll:
     post:
       operationId: enroll
@@ -145,20 +185,27 @@ paths:
         required: true
         content:
           multipart/form-data:
-            schema: { type: object }
+            schema:
+              type: object
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 type: object
-                required: [userId, faces]
+                required:
+                - userId
+                - faces
                 properties:
-                  userId: { $ref: "#/components/schemas/Uuid" }
+                  userId:
+                    $ref: '#/components/schemas/Uuid'
                   faces:
                     type: array
-                    items: { $ref: "#/components/schemas/EnrolledFace" }
-        "400": { $ref: "#/components/responses/Error" }
+                    items:
+                      $ref: '#/components/schemas/EnrolledFace'
+          description: ok
+        '400':
+          $ref: '#/components/responses/Error'
     patch:
       operationId: enrollAppend
       description: Append selfies to an existing reference set. Cap 5 total.
@@ -168,416 +215,689 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [userId]
+              required:
+              - userId
               properties:
-                userId: { $ref: "#/components/schemas/Uuid" }
+                userId:
+                  $ref: '#/components/schemas/Uuid'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 type: object
-                required: [userId, faces]
+                required:
+                - userId
+                - faces
                 properties:
-                  userId: { $ref: "#/components/schemas/Uuid" }
+                  userId:
+                    $ref: '#/components/schemas/Uuid'
                   faces:
                     type: array
-                    items: { $ref: "#/components/schemas/EnrolledFace" }
-        "400": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-
+                    items:
+                      $ref: '#/components/schemas/EnrolledFace'
+          description: ok
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
   /api/find:
     get:
       operationId: find
       parameters:
-        - { name: userId, in: query, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
-        - { name: albumId, in: query, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
-        - { name: threshold, in: query, schema: { type: string, enum: [strong, possible], default: strong } }
+      - name: userId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: albumId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: threshold
+        in: query
+        schema:
+          type: string
+          enum:
+          - strong
+          - possible
+          default: strong
       responses:
-        "200":
+        '200':
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/FindResponse" }
-        "404": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-
+              schema:
+                $ref: '#/components/schemas/FindResponse'
+          description: ok
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
   /api/places/autocomplete:
     get:
       operationId: placesAutocomplete
       parameters:
-        - { name: q, in: query, required: true, schema: { type: string, minLength: 3, maxLength: 120 } }
-        - { name: session, in: query, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 120
+      - name: session
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 type: object
-                required: [suggestions]
+                required:
+                - suggestions
                 properties:
                   suggestions:
                     type: array
                     items:
                       type: object
-                      required: [placeId, label]
+                      required:
+                      - placeId
+                      - label
                       properties:
-                        placeId: { type: string }
-                        label: { type: string }
-                  degraded: { type: string, enum: [upstream-failed] }
-
+                        placeId:
+                          type: string
+                        label:
+                          type: string
+                  degraded:
+                    type: string
+                    enum:
+                    - upstream-failed
+          description: ok
   /api/albums/{albumId}/venue:
     patch:
       operationId: linkVenue
       parameters:
-        - { $ref: "#/components/parameters/AlbumId" }
-        - { $ref: "#/components/parameters/OwnerToken" }
+      - $ref: '#/components/parameters/AlbumId'
+      - $ref: '#/components/parameters/OwnerToken'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [placeId, session]
+              required:
+              - placeId
+              - session
               properties:
-                placeId: { type: string }
-                session: { $ref: "#/components/schemas/Uuid" }
+                placeId:
+                  type: string
+                session:
+                  $ref: '#/components/schemas/Uuid'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 type: object
-                required: [venue]
+                required:
+                - venue
                 properties:
-                  venue: { $ref: "#/components/schemas/Venue" }
-        "403": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
+                  venue:
+                    $ref: '#/components/schemas/Venue'
+          description: ok
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
     delete:
       operationId: unlinkVenue
       parameters:
-        - { $ref: "#/components/parameters/AlbumId" }
-        - { $ref: "#/components/parameters/OwnerToken" }
+      - $ref: '#/components/parameters/AlbumId'
+      - $ref: '#/components/parameters/OwnerToken'
       responses:
-        "204": { description: unlinked }
-        "403": { $ref: "#/components/responses/Error" }
-
+        '204':
+          description: unlinked
+        '403':
+          $ref: '#/components/responses/Error'
   /api/photos/{photoId}:
     get:
       operationId: getPhoto
       parameters:
-        - { name: photoId, in: path, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
-        - { name: userId, in: query, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
-        - { name: thumb, in: query, schema: { type: boolean } }
+      - name: photoId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: userId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: thumb
+        in: query
+        schema:
+          type: boolean
       responses:
-        "200":
+        '200':
           description: image bytes
           content:
             image/*:
-              schema: { type: string, format: binary }
-        "404": { $ref: "#/components/responses/Error" }
-
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/Error'
   /api/albums/{albumId}/download:
     get:
       operationId: download
-      description: >
-        Zip of the caller's matches. Responses cap at 30 MB; zips over ~25 MB
-        split into parts, X-Parts header announces the count.
+      description: 'Zip of the caller''s matches. Responses cap at 30 MB; zips over ~25 MB split into
+        parts, X-Parts header announces the count.
+
+        '
       parameters:
-        - { $ref: "#/components/parameters/AlbumId" }
-        - { name: userId, in: query, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
-        - { name: part, in: query, schema: { type: integer, minimum: 1 } }
+      - $ref: '#/components/parameters/AlbumId'
+      - name: userId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      - name: part
+        in: query
+        schema:
+          type: integer
+          minimum: 1
       responses:
-        "200":
+        '200':
           description: application/zip part
           headers:
             X-Parts:
-              schema: { type: integer }
+              schema:
+                type: integer
           content:
             application/zip:
-              schema: { type: string, format: binary }
-        "404": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
   /api/debug/{albumId}:
     get:
       operationId: debugTrace
       parameters:
-        - { $ref: "#/components/parameters/AlbumId" }
-        - { name: cursor, in: query, schema: { type: integer, default: 0 } }
+      - $ref: '#/components/parameters/AlbumId'
+      - name: cursor
+        in: query
+        schema:
+          type: integer
+          default: 0
       responses:
-        "200":
+        '200':
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/DebugPage" }
-        "404": { $ref: "#/components/responses/Error" }
-
+              schema:
+                $ref: '#/components/schemas/DebugPage'
+          description: ok
+        '404':
+          $ref: '#/components/responses/Error'
   /api/users/{userId}:
     delete:
       operationId: deleteUser
       parameters:
-        - { name: userId, in: path, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
       responses:
-        "204": { description: erased }
-
+        '204':
+          description: erased
   /api/albums/{albumId}:
     delete:
       operationId: deleteAlbum
       parameters:
-        - { $ref: "#/components/parameters/AlbumId" }
-        - { $ref: "#/components/parameters/OwnerToken" }
+      - $ref: '#/components/parameters/AlbumId'
+      - $ref: '#/components/parameters/OwnerToken'
       responses:
-        "204": { description: erased }
-        "403": { $ref: "#/components/responses/Error" }
-
+        '204':
+          description: erased
+        '403':
+          $ref: '#/components/responses/Error'
 components:
   parameters:
     AlbumId:
       name: albumId
       in: path
       required: true
-      schema: { $ref: "#/components/schemas/Uuid" }
+      schema:
+        $ref: '#/components/schemas/Uuid'
     OwnerToken:
       name: X-Owner-Token
       in: header
       required: true
-      schema: { $ref: "#/components/schemas/Uuid" }
-
+      schema:
+        $ref: '#/components/schemas/Uuid'
   responses:
     Error:
       description: error envelope
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Error" }
-
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     Uuid:
       type: string
       format: uuid
-
     Error:
       type: object
-      required: [error]
+      required:
+      - error
       properties:
         error:
           type: object
-          required: [code, message, retryable]
+          required:
+          - code
+          - message
+          - retryable
           properties:
-            code: { type: string }
-            message: { type: string }
-            retryable: { type: boolean }
-            requestId: { type: string }
-
+            code:
+              type: string
+            message:
+              type: string
+            retryable:
+              type: boolean
+            requestId:
+              type: string
     EnrolledFace:
       type: object
-      required: [selfie, facePx, quality, multipleFaces]
+      required:
+      - selfie
+      - facePx
+      - quality
+      - multipleFaces
       properties:
-        selfie: { type: integer }
-        facePx: { type: integer }
-        quality: { type: number }
-        multipleFaces: { type: boolean }
-
+        selfie:
+          type: integer
+        facePx:
+          type: integer
+        quality:
+          type: number
+        multipleFaces:
+          type: boolean
     Status:
       type: object
-      required: [stage, photosTotal, photosDone, facesFound, stages]
+      required:
+      - stage
+      - photosTotal
+      - photosDone
+      - facesFound
+      - stages
       properties:
-        stage: { type: string, enum: [received, extracting, embedding, ready, failed] }
-        photosTotal: { type: integer }
-        photosDone: { type: integer }
-        facesFound: { type: integer }
+        stage:
+          type: string
+          enum:
+          - received
+          - extracting
+          - embedding
+          - ready
+          - failed
+        photosTotal:
+          type: integer
+        photosDone:
+          type: integer
+        facesFound:
+          type: integer
         stages:
           type: array
-          items: { type: string }
+          items:
+            type: string
         gpsCoverage:
           type: object
           properties:
-            withGps: { type: integer }
-            total: { type: integer }
-        startedAt: { type: string, format: date-time }
+            withGps:
+              type: integer
+            total:
+              type: integer
+        startedAt:
+          type: string
+          format: date-time
         error:
           anyOf:
-            - { $ref: "#/components/schemas/Error" }
-            - { type: "null" }
-
+          - $ref: '#/components/schemas/Error'
+          - type: 'null'
     Progress:
       type: object
-      required: [stage, photosDone, photosTotal, pct]
+      required:
+      - stage
+      - photosDone
+      - photosTotal
+      - pct
       properties:
-        stage: { type: string }
-        photosDone: { type: integer }
-        photosTotal: { type: integer }
-        facesFound: { type: integer }
-        pct: { type: number }
+        stage:
+          type: string
+        photosDone:
+          type: integer
+        photosTotal:
+          type: integer
+        facesFound:
+          type: integer
+        pct:
+          type: number
         rate:
           type: object
           properties:
-            photosPerSec: { type: number }
-            windowSec: { type: integer }
-        etaSec: { type: integer }
-        etaConfident: { type: boolean }
+            photosPerSec:
+              type: number
+            windowSec:
+              type: integer
+        etaSec:
+          type: integer
+        etaConfident:
+          type: boolean
         workers:
           type: object
           properties:
-            initializing: { type: integer }
-            running: { type: integer }
-
+            initializing:
+              type: integer
+            running:
+              type: integer
     Camera:
       type: object
-      required: [present]
+      required:
+      - present
       properties:
-        present: { type: boolean }
-        reason: { type: string }
-        make: { type: string }
-        model: { type: string }
-        lens: { type: string }
-        focalLengthMm: { type: number }
-        aperture: { type: number }
-        shutter: { type: string }
-        iso: { type: integer }
-
+        present:
+          type: boolean
+        reason:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        lens:
+          type: string
+        focalLengthMm:
+          type: number
+        aperture:
+          type: number
+        shutter:
+          type: string
+        iso:
+          type: integer
     Place:
       type: object
-      required: [present]
+      required:
+      - present
       properties:
-        present: { type: boolean }
-        reason: { type: string }
-        source: { type: string, enum: [google-geocoding, user-venue] }
-        label: { type: string }
-        lat: { type: number }
-        lon: { type: number }
-
+        present:
+          type: boolean
+        reason:
+          type: string
+        source:
+          type: string
+          enum:
+          - google-geocoding
+          - user-venue
+        label:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
     Weather:
       type: object
-      required: [present]
+      required:
+      - present
       properties:
-        present: { type: boolean }
-        reason: { type: string }
-        source: { type: string, enum: [open-meteo] }
-        basis: { type: string, enum: [photo-gps, venue-location] }
-        tempC: { type: number }
-        condition: { type: string }
-        cloudCoverPct: { type: number }
-        windKmh: { type: number }
-        localTime: { type: string }
-
+        present:
+          type: boolean
+        reason:
+          type: string
+        source:
+          type: string
+          enum:
+          - open-meteo
+        basis:
+          type: string
+          enum:
+          - photo-gps
+          - venue-location
+        tempC:
+          type: number
+        condition:
+          type: string
+        cloudCoverPct:
+          type: number
+        windKmh:
+          type: number
+        localTime:
+          type: string
     Vlm:
       type: object
-      required: [status]
+      required:
+      - status
       properties:
-        status: { type: string, enum: [ready, pending, unavailable] }
-        caption: { type: string }
+        status:
+          type: string
+          enum:
+          - ready
+          - pending
+          - unavailable
+        caption:
+          type: string
         tags:
           type: array
-          items: { type: string }
-        altText: { type: string }
-
+          items:
+            type: string
+        altText:
+          type: string
     Venue:
       type: object
-      required: [label, lat, lon, source]
+      required:
+      - label
+      - lat
+      - lon
+      - source
       properties:
-        placeId: { type: string }
-        label: { type: string }
-        lat: { type: number }
-        lon: { type: number }
-        source: { type: string, enum: [user] }
-
+        placeId:
+          type: string
+        label:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        source:
+          type: string
+          enum:
+          - user
     Match:
       type: object
-      required: [photoId, score, band, bbox, thumbUrl, fullUrl, camera, place, weather, enrichment, vlm]
+      required:
+      - photoId
+      - score
+      - band
+      - bbox
+      - thumbUrl
+      - fullUrl
+      - camera
+      - place
+      - weather
+      - enrichment
+      - vlm
       properties:
-        photoId: { $ref: "#/components/schemas/Uuid" }
-        score: { type: number }
-        band: { type: string, enum: [strong, possible] }
+        photoId:
+          $ref: '#/components/schemas/Uuid'
+        score:
+          type: number
+        band:
+          type: string
+          enum:
+          - strong
+          - possible
         bbox:
           type: array
-          items: { type: integer }
+          items:
+            type: integer
           minItems: 4
           maxItems: 4
-        thumbUrl: { type: string }
-        fullUrl: { type: string }
-        takenAt: { type: string }
-        camera: { $ref: "#/components/schemas/Camera" }
-        place: { $ref: "#/components/schemas/Place" }
-        weather: { $ref: "#/components/schemas/Weather" }
-        vlm: { $ref: "#/components/schemas/Vlm" }
+        thumbUrl:
+          type: string
+        fullUrl:
+          type: string
+        takenAt:
+          type: string
+        camera:
+          $ref: '#/components/schemas/Camera'
+        place:
+          $ref: '#/components/schemas/Place'
+        weather:
+          $ref: '#/components/schemas/Weather'
+        vlm:
+          $ref: '#/components/schemas/Vlm'
         enrichment:
           type: object
-          required: [status]
+          required:
+          - status
           properties:
-            status: { type: string, enum: [full, partial, metadata-scrubbed, upstream-failed, deferred] }
-
+            status:
+              type: string
+              enum:
+              - full
+              - partial
+              - metadata-scrubbed
+              - upstream-failed
+              - deferred
     FindResponse:
       type: object
-      required: [album, matches, enrichmentSummary, vlmSummary, story]
+      required:
+      - album
+      - matches
+      - enrichmentSummary
+      - vlmSummary
+      - story
       properties:
         album:
           type: object
-          required: [id, photos, faces]
+          required:
+          - id
+          - photos
+          - faces
           properties:
-            id: { $ref: "#/components/schemas/Uuid" }
-            photos: { type: integer }
-            faces: { type: integer }
+            id:
+              $ref: '#/components/schemas/Uuid'
+            photos:
+              type: integer
+            faces:
+              type: integer
         matches:
           type: array
-          items: { $ref: "#/components/schemas/Match" }
+          items:
+            $ref: '#/components/schemas/Match'
         story:
           type: object
-          required: [status]
+          required:
+          - status
           properties:
-            status: { type: string, enum: [ready, pending, unavailable] }
-            text: { type: string }
+            status:
+              type: string
+              enum:
+              - ready
+              - pending
+              - unavailable
+            text:
+              type: string
         enrichmentSummary:
           type: object
           properties:
-            full: { type: integer }
-            partial: { type: integer }
-            scrubbed: { type: integer }
-            upstreamFailed: { type: integer }
+            full:
+              type: integer
+            partial:
+              type: integer
+            scrubbed:
+              type: integer
+            upstreamFailed:
+              type: integer
         vlmSummary:
           type: object
           properties:
-            ready: { type: integer }
-            pending: { type: integer }
-            unavailable: { type: integer }
-
+            ready:
+              type: integer
+            pending:
+              type: integer
+            unavailable:
+              type: integer
     DebugEvent:
       type: object
-      required: [seq, ts, src, level, event]
+      required:
+      - seq
+      - ts
+      - src
+      - level
+      - event
       properties:
-        seq: { type: integer }
-        ts: { type: string }
-        src: { type: string }
-        level: { type: string, enum: [info, warn, error] }
-        requestId: { type: string }
-        event: { type: string }
-        data: { type: object }
-
+        seq:
+          type: integer
+        ts:
+          type: string
+        src:
+          type: string
+        level:
+          type: string
+          enum:
+          - info
+          - warn
+          - error
+        requestId:
+          type: string
+        event:
+          type: string
+        data:
+          type: object
     DebugPage:
       type: object
-      required: [cursor, events, snapshot]
+      required:
+      - cursor
+      - events
+      - snapshot
       properties:
-        cursor: { type: integer }
+        cursor:
+          type: integer
         events:
           type: array
-          items: { $ref: "#/components/schemas/DebugEvent" }
+          items:
+            $ref: '#/components/schemas/DebugEvent'
         snapshot:
           type: object
           properties:
             endpointHealth:
               type: object
               properties:
-                workersReady: { type: integer }
-                workersRunning: { type: integer }
-                queueDepth: { type: integer }
+                workersReady:
+                  type: integer
+                workersRunning:
+                  type: integer
+                queueDepth:
+                  type: integer
             rateLimit:
               type: object
               properties:
-                windowRemaining: { type: integer }
-                windowMax: { type: integer }
+                windowRemaining:
+                  type: integer
+                windowMax:
+                  type: integer
             circuits:
               type: object
-              additionalProperties: { type: string }
+              additionalProperties:
+                type: string
             enrichBudget:
               type: object
               properties:
-                used: { type: integer }
-                max: { type: integer }
+                used:
+                  type: integer
+                max:
+                  type: integer
