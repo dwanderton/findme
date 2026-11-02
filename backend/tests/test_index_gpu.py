@@ -6,7 +6,7 @@ from findme.albums import load_meta
 from findme.app.factory import create_app
 from findme.jobs.index_gpu import run_all_batches, run_gpu_batch
 from findme.store import load_index
-from tests.fixtures import jpeg
+from tests.test_media import noise_jpeg
 
 
 class FakeEngine:
@@ -31,7 +31,7 @@ def ctx(tmp_path):
     app = create_app(tmp_path)
     client = TestClient(app)
     album_id = client.post("/albums", json={"photoCount": 4}).json()["albumId"]
-    files = [(f"p{i}", (f"{i}.jpg", jpeg(200 + i, 150), "image/jpeg")) for i in range(4)]
+    files = [(f"p{i}", (f"{i}.jpg", noise_jpeg(i), "image/jpeg")) for i in range(4)]
     client.post("/upload", data={"albumId": album_id}, files=files)
     client.post(f"/albums/{album_id}/commit", json={"uploaded": 4})
     return tmp_path, album_id
