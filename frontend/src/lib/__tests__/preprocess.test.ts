@@ -7,9 +7,8 @@ const item = (size: number) => ({ blob: { size } });
 describe("planBatches", () => {
   it("caps by photo count", () => {
     const batches = planBatches(Array.from({ length: 20 }, () => item(1000)));
-    expect(batches.length).toBe(3);
+    expect(batches.length).toBe(Math.ceil(20 / BATCH_MAX_PHOTOS));
     expect(batches[0].length).toBe(BATCH_MAX_PHOTOS);
-    expect(batches[2].length).toBe(4);
   });
 
   it("caps by bytes", () => {

@@ -38,7 +38,13 @@ def main() -> int:
     ap.add_argument("--skip-vlm-assert", action="store_true")
     args = ap.parse_args()
 
-    c = httpx.Client(base_url=args.base, timeout=120)
+    import os
+
+    headers = {}
+    key = os.environ.get("RUNPOD_API_KEY")
+    if key and "runpod.ai" in args.base:
+        headers["Authorization"] = f"Bearer {key}"
+    c = httpx.Client(base_url=args.base, timeout=120, headers=headers)
 
     t = time.time()
     r = c.get("/health")

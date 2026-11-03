@@ -14,8 +14,8 @@ export type ClientExif = {
 
 export type PreppedPhoto = { name: string; blob: Blob; exif: ClientExif | null };
 
-export const BATCH_MAX_PHOTOS = 8;
-export const BATCH_MAX_BYTES = 8_000_000;
+export const BATCH_MAX_PHOTOS = 4;
+export const BATCH_MAX_BYTES = 4_000_000;
 export const RESIZE_PX = 2048;
 export const JPEG_QUALITY = 0.85;
 
