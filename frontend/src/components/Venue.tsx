@@ -72,7 +72,7 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
   if (venue) {
     return (
       <div className="chip active" data-testid="venue-chip">
-        VENUE {venue.label}
+        venue {venue.label}
         <button className="mono" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }} onClick={() => void unlink()}>
           unlink
         </button>
