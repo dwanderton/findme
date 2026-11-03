@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 import findme.places as places_mod
 from findme.app.factory import create_app
-from findme.places import AUTOCOMPLETE_URL
+from findme.places import AUTOCOMPLETE_URL, DETAILS_URL
 from findme.upstream import Circuit
 
 
@@ -16,30 +16,63 @@ def client(tmp_path, monkeypatch):
 
 
 @respx.mock
-def test_autocomplete_shape(client):
-    respx.get(AUTOCOMPLETE_URL).respond(
+def test_autocomplete_new_api_shape(client):
+    route = respx.post(AUTOCOMPLETE_URL).respond(
         json={
-            "status": "OK",
-            "predictions": [
-                {"place_id": "pid1", "description": "Shoreline Amphitheatre, Mountain View"},
-            ],
+            "suggestions": [
+                {
+                    "placePrediction": {
+                        "placeId": "pid1",
+                        "text": {"text": "Shoreline Amphitheatre, Mountain View, CA"},
+                    }
+                }
+            ]
         }
     )
     r = client.get("/places/autocomplete", params={"q": "shore", "session": "11111111-1111"})
     assert r.status_code == 200
-    assert r.json()["suggestions"][0] == {"placeId": "pid1", "label": "Shoreline Amphitheatre, Mountain View"}
+    assert r.json()["suggestions"][0] == {
+        "placeId": "pid1",
+        "label": "Shoreline Amphitheatre, Mountain View, CA",
+    }
+    req = route.calls[0].request
+    assert req.headers["x-goog-api-key"] == "test-key"
+    assert b"sessionToken" in req.content
 
 
 @respx.mock
-def test_autocomplete_degraded_on_failure(client, monkeypatch):
-    async def no_sleep(_):
-        return None
-
-    monkeypatch.setattr("findme.upstream.asyncio.sleep", no_sleep)
-    respx.get(AUTOCOMPLETE_URL).respond(status_code=500)
+def test_autocomplete_degraded_on_failure(client):
+    respx.post(AUTOCOMPLETE_URL).respond(status_code=500)
     r = client.get("/places/autocomplete", params={"q": "shore", "session": "11111111-1111"})
     assert r.status_code == 200
     assert r.json() == {"suggestions": [], "degraded": "upstream-failed"}
+    assert places_mod.circuit.state == "open"
+
+
+@respx.mock
+async def test_details_new_api(client, monkeypatch):
+    import httpx
+
+    places_mod.circuit = Circuit("places")
+    route = respx.get(f"{DETAILS_URL}/pid1").respond(
+        json={
+            "id": "pid1",
+            "displayName": {"text": "Shoreline Amphitheatre"},
+            "formattedAddress": "1 Amphitheatre Pkwy, Mountain View, CA",
+            "location": {"latitude": 37.4267, "longitude": -122.0806},
+        }
+    )
+    from findme.places import details
+
+    async with httpx.AsyncClient() as c:
+        v = await details(c, "pid1", "sess")
+    assert v == {
+        "placeId": "pid1",
+        "label": "Shoreline Amphitheatre",
+        "lat": 37.4267,
+        "lon": -122.0806,
+    }
+    assert "location" in route.calls[0].request.headers["x-goog-fieldmask"]
 
 
 def test_query_validation(client):
