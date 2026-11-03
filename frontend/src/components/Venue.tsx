@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { COPY } from "@/lib/copy";
 import { debounce } from "@/lib/debounce";
@@ -15,7 +15,11 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
   const [degraded, setDegraded] = useState(false);
   const [busy, setBusy] = useState(false);
   const session = useRef(crypto.randomUUID());
-  const owner = typeof window !== "undefined" ? localStorage.getItem(`owner:${albumId}`) : null;
+  const [owner, setOwner] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOwner(localStorage.getItem(`owner:${albumId}`));
+  }, [albumId]);
 
   const lookup = useMemo(
     () =>

@@ -116,8 +116,9 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
         runner(root, albumId, userId, pending_vlm, [m["photoId"] for m in out])
 
     matched_ids = {m["photoId"] for m in out}
-    if hasattr(request.app.state, "find_grants"):
-        request.app.state.find_grants.setdefault(userId, set()).update(matched_ids)
+    if not hasattr(request.app.state, "find_grants"):
+        request.app.state.find_grants = {}
+    request.app.state.find_grants.setdefault(userId, set()).update(matched_ids)
 
     return {
         "album": {"id": albumId, "photos": len(meta["photos"]), "faces": int(emb.shape[0])},

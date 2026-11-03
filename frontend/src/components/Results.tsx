@@ -151,7 +151,11 @@ function ExpandedPanel({ m }: { m: Match }) {
 
 export function AlbumActions({ albumId, userId }: { albumId: string; userId: string | null }) {
   const [copied, setCopied] = useState(false);
-  const owner = typeof window !== "undefined" ? localStorage.getItem(`owner:${albumId}`) : null;
+  const [owner, setOwner] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOwner(localStorage.getItem(`owner:${albumId}`));
+  }, [albumId]);
 
   async function remove() {
     if (!owner || !confirm(COPY.deleteConfirm)) return;
