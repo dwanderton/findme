@@ -53,9 +53,8 @@ const FEATURES: [string, React.ReactNode][] = [
   [
     "RUNPOD",
     <>
-      All compute runs on <Ext href="https://www.runpod.io">Runpod</Ext>: a load-balanced GPU endpoint for face
-      detection, embedding, and the map proxy, plus a queue endpoint serving the VLM. Flex workers scale to zero
-      between albums.
+      A load-balanced <Ext href="https://www.runpod.io">Runpod</Ext> GPU endpoint for face detection, embedding, and
+      the map proxy, plus a queue endpoint serving the VLM.
     </>,
   ],
   [
