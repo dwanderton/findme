@@ -21,12 +21,9 @@ const cardLabel: React.CSSProperties = {
   marginBottom: 10,
 };
 
-function ResultsSkeleton({ userId }: { userId: string }) {
+function ResultsSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="results-skeleton">
-      <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
-        enrolled {userId.slice(0, 8)} · waiting for index
-      </p>
       <div className="skeleton" style={{ width: "40%", height: 16 }} />
       <div style={{ display: "flex", gap: 8 }}>
         <div className="skeleton" style={{ width: 56, height: 26, borderRadius: 999 }} />
@@ -50,7 +47,7 @@ function ResultsSkeleton({ userId }: { userId: string }) {
 
 export default function AlbumPage({ params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = use(params);
-  const [committed, setCommitted] = useState(false);
+  const [committed, setCommitted] = useState<boolean | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem(`user:${albumId}`);
@@ -58,11 +55,14 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
     void fetch(`/api/albums/${albumId}/status`)
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => {
-        if (!s) return;
-        if (s.stage !== "received") setCommitted(true);
+        if (!s) {
+          setCommitted(false);
+          return;
+        }
+        setCommitted(s.stage !== "received");
         if (s.stage === "ready") setReady(true);
       })
-      .catch(() => {});
+      .catch(() => setCommitted(false));
   }, [albumId]);
   const [tiles, setTiles] = useState<string[]>([]);
   const [servedTiles, setServedTiles] = useState<string[]>([]);
@@ -87,25 +87,25 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         </span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {!committed && (
+        {committed === false && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>1 · ALBUM</span>
             <Upload albumId={albumId} onCommitted={() => viewTransition(() => setCommitted(true))} onTiles={setTiles} />
           </section>
         )}
-        {committed && !ready && (
+        {committed === true && !ready && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>INDEXING</span>
             <Progress albumId={albumId} onReady={() => viewTransition(() => setReady(true))} />
           </section>
         )}
-        {!ready && !userId && (
+        {committed !== null && !ready && !userId && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>2 · YOU</span>
             <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
           </section>
         )}
-        {userId && !ready && <ResultsSkeleton userId={userId} />}
+        {userId && !ready && <ResultsSkeleton />}
         {ready && !userId && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>2 · YOU</span>
