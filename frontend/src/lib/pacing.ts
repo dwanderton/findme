@@ -1,4 +1,4 @@
-export const STAGE_DWELL_MS = 1000;
+export const STAGE_DWELL_MS = 2000;
 export const COUNT_STEP_MS = 100;
 export const COUNT_PACE_MAX = 50;
 

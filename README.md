@@ -73,3 +73,15 @@ env table: VLM_BASE_URL, VLM_MODEL, RUNPOD_API_KEY on-worker, CORS_ORIGINS,
 DEBUG_UI). Needs `RUNPOD_API_KEY` and `GOOGLE_MAPS_API_KEY`;
 Vercel hosts the frontend. Standing cost when idle: the 20 GB volume
 ($1.40/mo); all compute is flex min=0.
+
+### External API free tiers
+
+| API | Free tier |
+|-----|-----------|
+| Google Geocoding | 10,000 requests/month |
+| Google Maps Static | 10,000 requests/month |
+| Google Places (New) | 10,000 requests/month |
+| Open-Meteo | free for non-commercial use; fair-use guideline under 10,000 calls/day, no key required |
+
+The enrichment cluster cache (place reused within a quarter mile, weather
+within a mile and 30 minutes) keeps a typical album far below these limits.
