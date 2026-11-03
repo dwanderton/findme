@@ -4,6 +4,7 @@ import { use, useState } from "react";
 
 import { Backdrop } from "@/components/Backdrop";
 import { Enroll } from "@/components/Enroll";
+import { Progress } from "@/components/Progress";
 import { Upload } from "@/components/Upload";
 import { COPY } from "@/lib/copy";
 
@@ -13,6 +14,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
   const [tiles, setTiles] = useState<string[]>([]);
   const [servedTiles] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px", position: "relative" }}>
@@ -25,15 +27,11 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
       </h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
         <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />
-        {committed && (
-          <p className="mono" style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
-            indexing started · progress UI lands next
-          </p>
-        )}
+        {committed && <Progress albumId={albumId} onReady={() => setReady(true)} />}
         <Enroll onFind={(uid) => setUserId(uid)} />
         {userId && (
           <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
-            enrolled {userId.slice(0, 8)} · results UI lands next
+            enrolled {userId.slice(0, 8)}{ready ? " · index ready" : " · waiting for index"} · results UI lands next
           </p>
         )}
       </div>
