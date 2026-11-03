@@ -42,7 +42,7 @@ export function Backdrop({
         .marquee {
           position: fixed;
           inset: -12vh -6vw;
-          z-index: -1;
+          z-index: 0;
           display: flex;
           gap: 1.2vw;
           transform: rotate(-3.5deg) scale(1.08);
@@ -77,7 +77,7 @@ export function Backdrop({
         .mq-veil {
           position: fixed;
           inset: 0;
-          z-index: 0;
+          z-index: 1;
           pointer-events: none;
           background:
             radial-gradient(ellipse 80% 60% at 50% 38%, oklch(0.13 0.05 291 / 0.42) 0%, oklch(0.13 0.05 291 / 0.82) 75%),

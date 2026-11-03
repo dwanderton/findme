@@ -22,6 +22,8 @@ export function Progress({ albumId, onReady }: { albumId: string; onReady: (s: P
   const latest = useRef<ProgressSnapshot | null>(null);
   const readyFired = useRef(false);
   const tracker = useRef(new EtaTracker());
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
   const [eta, setEta] = useState<{ etaSec: number | null; confident: boolean }>({ etaSec: null, confident: false });
 
   useEffect(() => {
@@ -42,14 +44,14 @@ export function Progress({ albumId, onReady }: { albumId: string; onReady: (s: P
       setView(v);
       if (v.stage === "ready" && !readyFired.current && latest.current) {
         readyFired.current = true;
-        onReady(latest.current);
+        onReadyRef.current(latest.current);
       }
     }, 50);
     return () => {
       stop();
       clearInterval(interval);
     };
-  }, [albumId, onReady]);
+  }, [albumId]);
 
   if (!snap || !view) return null;
   const total = snap.photosTotal;
