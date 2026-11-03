@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_TILES, pickTiles } from "../../components/Backdrop";
+import { DEFAULT_TILES, MAX_TILES, pickTiles } from "../../components/Backdrop";
 
 describe("pickTiles", () => {
   it("uses upload urls until served urls exist", () => {
@@ -18,6 +18,14 @@ describe("pickTiles", () => {
 
   it("empty everywhere yields empty", () => {
     expect(pickTiles([], [])).toEqual([]);
+  });
+});
+
+describe("DEFAULT_TILES", () => {
+  it("provides a demo album under the tile cap", () => {
+    expect(DEFAULT_TILES.length).toBeGreaterThan(0);
+    expect(DEFAULT_TILES.length).toBeLessThanOrEqual(MAX_TILES);
+    for (const tile of DEFAULT_TILES) expect(tile).toMatch(/^\/muppets\/[\w-]+\.avif$/);
   });
 });
 

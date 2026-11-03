@@ -2,6 +2,14 @@
 
 export const MAX_TILES = 60;
 
+/* Demo album shown until the visitor uploads their own photos. */
+export const DEFAULT_TILES = [
+  "abby", "baby-bear", "bert", "big-bird", "cookie-monster", "cookie-monster-1",
+  "cookie-monster-2", "count-von-count", "elmo", "ernie", "gabrielle", "gonger",
+  "grover", "ji-young", "julia", "oscar", "rosita", "rudy", "snuffy", "tamir",
+  "tango", "telly", "zoe",
+].map((name) => `/muppets/${name}.avif`);
+
 export function pickTiles(uploadUrls: string[], servedUrls: string[]): string[] {
   const source = servedUrls.length > 0 ? servedUrls : uploadUrls;
   if (source.length <= MAX_TILES) return source;
@@ -22,8 +30,8 @@ export function Backdrop({
   servedUrls: string[];
   dimmed?: boolean;
 }) {
-  const tiles = pickTiles(uploadUrls, servedUrls);
-  if (!tiles.length) return null;
+  const picked = pickTiles(uploadUrls, servedUrls);
+  const tiles = picked.length > 0 ? picked : DEFAULT_TILES;
   const cols = columnize(tiles).filter((c) => c.length > 0);
 
   return (

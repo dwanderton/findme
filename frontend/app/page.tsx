@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Backdrop } from "@/components/Backdrop";
 import { DebugConsole } from "@/components/DebugConsole";
 import { createAlbum } from "@/lib/api";
 import { COPY } from "@/lib/copy";
@@ -95,7 +96,9 @@ export default function Home() {
   }
 
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px", position: "relative", zIndex: 1 }}>
+    <>
+      <Backdrop uploadUrls={[]} servedUrls={[]} />
+      <main style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px", position: "relative", zIndex: 2 }}>
       <DebugConsole />
       <div className="card card-in" style={{ padding: "32px 28px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
@@ -149,6 +152,7 @@ export default function Home() {
       <p className="mono" style={{ color: "var(--muted)", marginTop: 28, fontSize: "0.68rem", textAlign: "center" }}>
         face search on Runpod serverless
       </p>
-    </main>
+      </main>
+    </>
   );
 }
