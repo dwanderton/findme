@@ -1,5 +1,7 @@
 # findMe
 
+**Are you an agent?** Deploy instructions are in [AGENTS.md](AGENTS.md).
+
 Upload an album, enroll a selfie, get back every photo you appear in. Each
 match carries where it was taken (Google Geocoding), the weather at capture
 time (Open-Meteo), the camera settings that shot it (EXIF), and a generated

@@ -68,7 +68,7 @@ the VLM endpoint's id, so create the VLM first.
    | Image | `runpod/worker-v1-vllm:v2.25.0` |
    | Data center | US-NE-1 (same as the volume) |
    | GPU | 1x, pools AMPERE_24 / ADA_48_PRO / BLACKWELL_96, CUDA >= 12.8 |
-   | Workers | min 0, max 1, idle timeout 120 s, FlashBoot on |
+   | Workers | min 0, max 1, idle timeout 1800 s, FlashBoot on |
    | Scaling | queue delay 4 s |
    | Container disk | 40 GB |
    | Volume | `findme` |
@@ -81,7 +81,7 @@ the VLM endpoint's id, so create the VLM first.
    | Image | `ghcr.io/<github-user>/findme/api:vN` + registry credential |
    | Data center | US-NE-1 |
    | GPU | 1x, pools AMPERE_24 / ADA_24 / ADA_48_PRO / BLACKWELL_96, CUDA >= 12.8 |
-   | Workers | min 0, max 2, idle timeout 60 s, FlashBoot on |
+   | Workers | min 0, max 2, idle timeout 1800 s, FlashBoot on |
    | Scaling | request count 4 |
    | Container disk | 20 GB |
    | Ports | 80/http, 8000/http |
@@ -121,7 +121,7 @@ and `RUNPOD_API_KEY` (used by the `/api` proxy), plus optionally
 page's `/api/warmup` route also warms the VLM endpoint with a one-token
 async job; without it only the api endpoint is warmed. Warmup is throttled
 to one upstream hit per 60 s per instance; note each VLM warm bills GPU
-seconds until its 120 s idle timeout.
+seconds until its 1800 s idle timeout.
 
 Then set `CORS_ORIGINS` on `findme-api` to the Vercel URL. Env edits cut a
 release that only rolls as workers cycle; use the forced rollout below to
@@ -152,7 +152,7 @@ image update on the api endpoint:
 3. `update-endpoint {"workers": {"min": 0, "max": 0}}`. Terminates all
    workers including stale ones and PAUSES the endpoint.
 4. Poll `list-endpoint-workers` until total = 0 (usually seconds).
-5. `update-endpoint {"workers": {"min": 0, "max": 2, "idleTimeout": 60}}`.
+5. `update-endpoint {"workers": {"min": 0, "max": 2, "idleTimeout": 1800}}`.
 6. Expect ~20-25 s gateway lag after unpause (first request may 409
    ENDPOINT_PAUSED); verify with an authed request to a route that only
    exists in the new image.
@@ -175,5 +175,5 @@ back to 0 after (checklist, not infra).
 | Volume (US-NE-1, 20 GB) | `n8eck87ef2` (mounts `/runpod-volume`; VLM HF cache at `/runpod-volume/hf-cache`) |
 | Secrets | `findme-google-maps-api-key`, `findme-runpod-api-key` |
 | Registry credential (ghcr) | `cmw01ek13007vydkiux2k0l2s` |
-| Image | `ghcr.io/dwanderton/findme/api:v7` |
+| Image | `ghcr.io/dwanderton/findme/api:v9` |
 | Frontend | https://findme-mocha.vercel.app (Vercel project "findme"; env `BACKEND_URL` + `RUNPOD_API_KEY` + `VLM_BASE_URL`) |
