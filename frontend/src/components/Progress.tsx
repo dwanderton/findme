@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { COPY } from "@/lib/copy";
-import { EtaTracker, stageViews, watchProgress } from "@/lib/progressClient";
+import { ProgressPacer, type PacedView } from "@/lib/pacing";
+import { EtaTracker, watchProgress } from "@/lib/progressClient";
 import type { ProgressSnapshot } from "@/lib/sse";
 
 const LABELS: Record<string, string> = {
@@ -11,62 +12,71 @@ const LABELS: Record<string, string> = {
   extracting: COPY.stageExtracting,
   embedding: COPY.stageEmbedding,
   ready: COPY.stageReady,
+  failed: "indexing failed",
 };
 
 export function Progress({ albumId, onReady }: { albumId: string; onReady: (s: ProgressSnapshot) => void }) {
   const [snap, setSnap] = useState<ProgressSnapshot | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [view, setView] = useState<PacedView | null>(null);
+  const pacer = useRef<ProgressPacer | null>(null);
+  const latest = useRef<ProgressSnapshot | null>(null);
+  const readyFired = useRef(false);
   const tracker = useRef(new EtaTracker());
   const [eta, setEta] = useState<{ etaSec: number | null; confident: boolean }>({ etaSec: null, confident: false });
 
   useEffect(() => {
-    const stop = watchProgress(albumId, {
-      onSnapshot: (s) => {
+    pacer.current = new ProgressPacer(Date.now());
+    const apply = (s: ProgressSnapshot) => {
+      latest.current = s;
+      pacer.current?.feed(s.stage, s.photosDone, s.photosTotal);
+      if (s.stage === "embedding") {
         tracker.current.observe(Date.now(), s.photosDone);
         setEta(tracker.current.compute(Date.now(), s.photosDone, s.photosTotal));
-        setSnap(s);
-      },
-      onDone: (s) => {
-        setSnap(s);
-        onReady(s);
-      },
-      onFailed: (s) => {
-        setSnap(s);
-        setFailed(true);
-      },
-    });
-    return stop;
+      }
+      setSnap(s);
+    };
+    const stop = watchProgress(albumId, { onSnapshot: apply, onDone: apply, onFailed: apply });
+    const interval = setInterval(() => {
+      if (!pacer.current) return;
+      const v = pacer.current.tick(Date.now());
+      setView(v);
+      if (v.stage === "ready" && !readyFired.current && latest.current) {
+        readyFired.current = true;
+        onReady(latest.current);
+      }
+    }, 50);
+    return () => {
+      stop();
+      clearInterval(interval);
+    };
   }, [albumId, onReady]);
 
-  if (!snap) return null;
-  const views = stageViews(snap.stage, LABELS);
-  const pct = snap.photosTotal ? Math.round((snap.photosDone / snap.photosTotal) * 1000) / 10 : 0;
-
-  const current = failed
-    ? { key: "failed", label: "indexing failed", state: "failed" as const }
-    : (views.find((v) => v.state === "active") ?? views[views.length - 1]);
-  const dotClass = current.state === "failed" ? "error" : current.state === "done" ? "idle" : "running";
+  if (!snap || !view) return null;
+  const total = snap.photosTotal;
+  const pct = total ? Math.round((view.done / total) * 1000) / 10 : 0;
+  const active = view.stage !== "ready" && view.stage !== "failed";
+  const dotClass = view.stage === "failed" ? "error" : view.stage === "ready" ? "idle" : "running";
 
   return (
     <div className="card" data-testid="progress">
       <div
-        key={current.key}
+        key={view.stage}
         className="mono log-stream"
         style={{ display: "flex", gap: 10, alignItems: "center", fontSize: "0.82rem" }}
       >
         <span
           className={`dot ${dotClass}`}
-          style={current.state === "done" ? { background: "var(--status-running)" } : undefined}
+          style={view.stage === "ready" ? { background: "var(--status-running)" } : undefined}
         />
-        <span>{current.label}</span>
-        {current.state === "active" && (
+        <span>{LABELS[view.stage] ?? view.stage}</span>
+        {active && total > 0 && (
           <span style={{ color: "var(--muted)" }}>
-            {snap.photosDone}/{snap.photosTotal} · {pct}%
-            {snap.facesFound ? ` · ${snap.facesFound} faces` : ""}
-            {eta.confident && eta.etaSec !== null ? ` · ~${eta.etaSec}s left` : ""}
+            {view.done}/{total} · {pct}%
+            {view.stage === "embedding" && snap.facesFound ? ` · ${snap.facesFound} faces` : ""}
+            {view.stage === "embedding" && eta.confident && eta.etaSec !== null ? ` · ~${eta.etaSec}s left` : ""}
           </span>
         )}
-        {current.state === "failed" && (
+        {view.stage === "failed" && (
           <span style={{ color: "var(--status-error)" }}>create a new album and retry</span>
         )}
       </div>
