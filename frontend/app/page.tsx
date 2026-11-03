@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { DebugConsole } from "@/components/DebugConsole";
 import { createAlbum } from "@/lib/api";
 import { COPY } from "@/lib/copy";
+import { installFetchInterceptor } from "@/lib/debugLog";
 
 function Ext({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -73,6 +75,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    installFetchInterceptor();
     void fetch("/api/warmup", { method: "POST" }).catch(() => {});
   }, []);
 
@@ -91,6 +94,7 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px", position: "relative", zIndex: 1 }}>
+      <DebugConsole />
       <div className="card card-in" style={{ padding: "32px 28px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
           <div>

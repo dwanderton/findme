@@ -13,7 +13,7 @@ import {
 
 const FILTERS: Filter[] = ["all", "client", "server", "external", "errors"];
 
-export function DebugConsole({ albumId }: { albumId: string }) {
+export function DebugConsole({ albumId }: { albumId?: string }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [highlight, setHighlight] = useState<string | undefined>(undefined);
@@ -34,6 +34,7 @@ export function DebugConsole({ albumId }: { albumId: string }) {
   }, []);
 
   const refresh = useCallback(async () => {
+    if (!albumId) return;
     try {
       const r = await fetch(`/api/debug/${albumId}`);
       if (!r.ok) return;
