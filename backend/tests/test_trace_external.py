@@ -157,3 +157,50 @@ def test_debug_snapshot_lists_all_circuits(ctx):
     assert set(snap["circuits"]) == {"google", "places", "open-meteo", "staticmap"}
     assert all(v in ("open", "closed") for v in snap["circuits"].values())
     assert "rateLimit" not in snap and "enrichBudget" not in snap
+
+
+def test_middleware_traces_album_scoped_request(ctx):
+    root, client, album_id = ctx
+    r = client.get(f"/albums/{album_id}/status", headers={"x-request-id": "rid-mw"})
+    assert r.status_code == 200
+    https = [e for e in events_for(root, album_id, "server") if e["event"] == "http"]
+    (e,) = [e for e in https if e["data"]["path"].endswith("/status")]
+    assert e["data"]["method"] == "GET"
+    assert e["data"]["status"] == 200
+    assert e["data"]["ms"] >= 0
+    assert e["requestId"] == "rid-mw"
+
+
+def test_middleware_routes_albumless_requests_to_global_trace(ctx):
+    root, client, album_id = ctx
+    with respx.mock:
+        respx.post(AUTOCOMPLETE_URL).respond(json={"suggestions": []})
+        client.get("/places/autocomplete", params={"q": "shore", "session": "11111111-1111"})
+    merged = events_for(root, album_id, "server")
+    assert any(e["data"]["path"] == "/places/autocomplete" for e in merged)
+    assert (root / "trace" / "api.jsonl").exists()
+
+
+def test_ping_traced_only_with_request_id(ctx):
+    root, client, album_id = ctx
+    client.get("/ping")
+    assert not [e for e in events_for(root, album_id, "server") if e["data"].get("path") == "/ping"]
+    client.get("/ping", headers={"x-request-id": "rid-warm"})
+    (e,) = [e for e in events_for(root, album_id, "server") if e["data"].get("path") == "/ping"]
+    assert e["requestId"] == "rid-warm"
+
+
+def test_debug_polling_never_traces_itself(ctx):
+    root, client, album_id = ctx
+    for _ in range(3):
+        client.get(f"/debug/{album_id}")
+    assert not [e for e in events_for(root, album_id, "server") if "/debug" in e["data"].get("path", "")]
+
+
+def test_emit_survives_deleted_album_dir(tmp_path):
+    import shutil
+
+    w = TraceWriter(tmp_path, "gone", "job")
+    w.emit("gpu-qb", "batch.start")
+    shutil.rmtree(tmp_path / "albums" / "gone")
+    w.emit("gpu-qb", "batch.done")  # must not raise

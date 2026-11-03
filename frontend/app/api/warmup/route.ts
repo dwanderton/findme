@@ -5,12 +5,17 @@ import { claimWarm, vlmRunUrl } from "@/lib/warmup";
 export const maxDuration = 60;
 
 export async function POST() {
-  if (!claimWarm()) return Response.json({ status: "already-warm" });
+  const requestId = crypto.randomUUID();
+  if (!claimWarm()) {
+    return Response.json({ status: "already-warm" }, { headers: { "x-request-id": requestId } });
+  }
 
   const key = process.env.RUNPOD_API_KEY;
   const auth: Record<string, string> = key ? { authorization: `Bearer ${key}` } : {};
 
-  const api = fetch(`${BACKEND_URL()}/ping`, { headers: auth, cache: "no-store" })
+  // The request id marks this ping as user-initiated so the backend traces it
+  // (anonymous health-check pings are filtered as noise).
+  const api = fetch(`${BACKEND_URL()}/ping`, { headers: { ...auth, "x-request-id": requestId }, cache: "no-store" })
     .then((r) => r.ok)
     .catch(() => false);
 
@@ -29,5 +34,5 @@ export async function POST() {
     : Promise.resolve(false);
 
   const [apiOk, vlmOk] = await Promise.all([api, vlm]);
-  return Response.json({ status: "warming", api: apiOk, vlm: vlmOk });
+  return Response.json({ status: "warming", api: apiOk, vlm: vlmOk }, { headers: { "x-request-id": requestId } });
 }
