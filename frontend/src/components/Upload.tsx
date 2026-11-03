@@ -49,7 +49,7 @@ export function Upload({
   }
 
   async function handleFiles(list: File[]) {
-    const files = list.filter((f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name));
+    const files = list.filter((f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic|avif)$/i.test(f.name));
     if (!files.length) return;
     if (files.length > MAX_ALBUM_PHOTOS) {
       failNow(`${files.length} images selected; an album holds up to ${MAX_ALBUM_PHOTOS}.`);

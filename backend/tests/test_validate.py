@@ -18,6 +18,14 @@ def test_sniff_jpeg_png_webp():
     assert sniff(buf.getvalue()) == "image/webp"
 
 
+def test_sniff_avif():
+    buf = io.BytesIO()
+    Image.new("RGB", (4, 4)).save(buf, "AVIF")
+    data = buf.getvalue()
+    assert sniff(data) == "image/avif"
+    assert check_decodable(data) == (4, 4)
+
+
 def test_lying_extension_rejected():
     with pytest.raises(ApiError) as e:
         check_image(b"GIF89a" + b"\x00" * 64, name="x.jpg")

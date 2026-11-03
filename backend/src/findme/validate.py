@@ -29,6 +29,8 @@ def sniff(data: bytes) -> str | None:
         return "image/webp"
     if len(data) > 12 and data[4:8] == b"ftyp" and data[8:12] in (b"heic", b"heix", b"mif1"):
         return "image/heic"
+    if len(data) > 12 and data[4:8] == b"ftyp" and data[8:12] in (b"avif", b"avis"):
+        return "image/avif"
     return None
 
 
@@ -37,7 +39,7 @@ def check_image(data: bytes, max_bytes: int = MAX_PHOTO_BYTES, name: str = "") -
         raise ApiError("BODY_TOO_LARGE", f"{name or 'file'} exceeds {max_bytes} bytes.", name=name)
     mime = sniff(data)
     if mime is None:
-        raise ApiError("UNSUPPORTED_MEDIA", f"{name or 'file'} is not jpeg/png/webp/heic.", name=name)
+        raise ApiError("UNSUPPORTED_MEDIA", f"{name or 'file'} is not jpeg/png/webp/heic/avif.", name=name)
     return mime
 
 
