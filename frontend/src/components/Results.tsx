@@ -6,7 +6,7 @@ import { apiJson } from "@/lib/api";
 import { COPY } from "@/lib/copy";
 import {
   altText,
-  cameraLine,
+  cameraParts,
   filterMatches,
   photoLine,
   placeLine,
@@ -291,7 +291,7 @@ function LocationCard({ m, albumId }: { m: Match; albumId: string }) {
 }
 
 function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; onRefresh: () => void }) {
-  const camera = cameraLine(m.camera);
+  const camera = cameraParts(m.camera);
   return (
     <div
       data-testid="panel"
@@ -319,8 +319,14 @@ function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; o
       <LocationCard m={m} albumId={albumId} />
 
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        {camera && <p className="mono" style={{ fontSize: "0.8rem" }}>{camera}</p>}
-        <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: camera ? 8 : 0 }}>
+        {camera.length > 0 && (
+          <div className="mono" style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+            {camera.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </div>
+        )}
+        <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: camera.length > 0 ? 8 : 0 }}>
           {m.takenAt ? `taken ${m.takenAt.slice(0, 10)} · ` : ""}match {m.band} · score {m.score.toFixed(2)}
         </p>
       </div>
