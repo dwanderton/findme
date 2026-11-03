@@ -37,6 +37,8 @@ const FEATURES: [string, React.ReactNode][] = [
       EXIF GPS resolved to a place with{" "}
       <Ext href="https://developers.google.com/maps/documentation/geocoding">Google Geocoding</Ext> and plotted on a{" "}
       <Ext href="https://developers.google.com/maps/documentation/maps-static">Google Static Map</Ext> for each match.
+      Albums without GPS link a venue through{" "}
+      <Ext href="https://developers.google.com/maps/documentation/places/web-service">Google Places</Ext>.
     </>,
   ],
   [
