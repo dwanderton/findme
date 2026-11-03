@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { commitAlbum, uploadAll, type UploadProgress } from "@/lib/api";
 import { COPY } from "@/lib/copy";
+import { STAGE_DWELL_MS } from "@/lib/pacing";
 import { preprocessFile, type PreppedPhoto } from "@/lib/preprocess";
 
 type Phase = "idle" | "preprocessing" | "uploading" | "committing" | "done" | "error";
@@ -23,13 +24,33 @@ export function Upload({
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const timers = useRef<number[]>([]);
+  const nextAt = useRef(0);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  function schedule(fn: () => void) {
+    const now = Date.now();
+    const at = Math.max(now, nextAt.current);
+    nextAt.current = at + STAGE_DWELL_MS;
+    timers.current.push(window.setTimeout(fn, at - now));
+  }
+
+  function failNow(msg: string) {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    nextAt.current = 0;
+    setMessage(msg);
+    setPhase("error");
+  }
 
   async function handleFiles(list: FileList | null) {
     if (!list || list.length === 0) return;
     const files = Array.from(list).filter((f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name));
     if (!files.length) return;
-    setPhase("preprocessing");
+    nextAt.current = 0;
     setMessage(null);
+    schedule(() => setPhase("preprocessing"));
     const photos: PreppedPhoto[] = [];
     let gps = 0;
     const tiles: string[] = [];
@@ -44,22 +65,22 @@ export function Upload({
         onTiles?.([...tiles]);
       }
     }
-    setPhase("uploading");
+    schedule(() => setPhase("uploading"));
     const result = await uploadAll(albumId, photos, setProgress);
     if (result.failed.length) {
-      setPhase("error");
-      setMessage(`${result.failed.length} files failed. ${COPY.uploadRetry}?`);
+      failNow(`${result.failed.length} files failed. ${COPY.uploadRetry}?`);
       return;
     }
-    setPhase("committing");
+    schedule(() => setPhase("committing"));
     try {
       const commit = await commitAlbum(albumId, result.uploaded);
-      setMessage(`${commit.accepted} photos accepted${commit.rejected.length ? `, ${commit.rejected.length} rejected` : ""}`);
-      setPhase("done");
-      onCommitted();
+      schedule(() => {
+        setMessage(`${commit.accepted} photos accepted${commit.rejected.length ? `, ${commit.rejected.length} rejected` : ""}`);
+        setPhase("done");
+      });
+      schedule(onCommitted);
     } catch (e) {
-      setPhase("error");
-      setMessage(e instanceof Error ? e.message : "Commit failed.");
+      failNow(e instanceof Error ? e.message : "Commit failed.");
     }
   }
 
