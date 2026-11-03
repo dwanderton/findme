@@ -56,7 +56,7 @@ def create_app(root: Path | None = None) -> FastAPI:
 
             app.state.run_vlm = vlm_runner
 
-    from findme.routes import album, delete, enroll, find, media, places, status, upload
+    from findme.routes import album, delete, enroll, find, media, places, staticmap, status, upload
 
     app.include_router(album.router)
     app.include_router(upload.router)
@@ -65,5 +65,6 @@ def create_app(root: Path | None = None) -> FastAPI:
     app.include_router(find.router)
     app.include_router(media.router)
     app.include_router(places.router)
+    app.include_router(staticmap.router)
     app.include_router(delete.router)
     return app
