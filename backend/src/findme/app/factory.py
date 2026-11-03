@@ -46,15 +46,18 @@ def create_app(root: Path | None = None) -> FastAPI:
         if os.environ.get("VLM_BASE_URL"):
             import asyncio
 
-            from findme.jobs.vlm_job import run_vlm_job
+            from findme.jobs.vlm_job import make_vlm_runner, run_vlm_job
 
-            def vlm_runner(root: Path, album_id: str, user_id: str, photo_ids: list) -> None:
+            def spawn(root: Path, album_id: str, user_id: str, photo_ids: list, release) -> None:
                 def work():
-                    asyncio.run(run_vlm_job(root, album_id, user_id, photo_ids))
+                    try:
+                        asyncio.run(run_vlm_job(root, album_id, user_id, photo_ids))
+                    finally:
+                        release()
 
                 threading.Thread(target=work, daemon=True).start()
 
-            app.state.run_vlm = vlm_runner
+            app.state.run_vlm = make_vlm_runner(spawn)
 
     from findme.routes import album, delete, enroll, find, media, places, staticmap, status, upload
 
