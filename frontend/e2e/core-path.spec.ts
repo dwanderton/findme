@@ -15,9 +15,8 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
     path.join(ASSETS, "s2_a.jpg"),
     path.join(ASSETS, "s2_b.jpg"),
   ]);
-  await expect(upload.getByText(/photos accepted/)).toBeVisible({ timeout: 60_000 });
-
-  await expect(page.getByTestId("progress")).toBeVisible();
+  await expect(page.getByTestId("progress")).toBeVisible({ timeout: 60_000 });
+  await expect(upload).not.toBeVisible();
   await expect(page.getByTestId("progress").getByText("ready", { exact: true })).toBeVisible({ timeout: 60_000 });
 
   const enroll = page.getByTestId("enroll");

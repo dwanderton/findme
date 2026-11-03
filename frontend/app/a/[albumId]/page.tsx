@@ -50,7 +50,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         </span>
       </h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
-        <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />
+        {!committed && <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />}
         {committed && <Progress albumId={albumId} onReady={(s) => { setReady(true); setGps(s.gpsCoverage); }} />}
         <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); setUserId(uid); }} />
         {userId && !ready && (
