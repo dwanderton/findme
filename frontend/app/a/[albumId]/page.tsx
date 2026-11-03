@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 
 import { Backdrop } from "@/components/Backdrop";
+import { Banners } from "@/components/Banners";
 import { DebugConsole } from "@/components/DebugConsole";
 import { Enroll } from "@/components/Enroll";
 import { Progress } from "@/components/Progress";
@@ -25,6 +26,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px", position: "relative" }}>
       <Backdrop uploadUrls={tiles} servedUrls={servedTiles} />
       <DebugConsole albumId={albumId} />
+      <Banners />
       <h1 style={{ fontSize: "1.3rem" }}>
         <span style={{ color: "var(--primary)" }}>▲</span> {COPY.appName}
         <span className="mono" style={{ color: "var(--muted)", fontSize: "0.7rem", marginLeft: 12 }}>
