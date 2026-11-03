@@ -30,8 +30,8 @@ export function Backdrop({ uploadUrls, servedUrls }: { uploadUrls: string[]; ser
           gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
           gap: 4,
           minHeight: "120vh",
-          opacity: 0.16,
-          filter: "saturate(0.7)",
+          opacity: 0.38,
+          filter: "saturate(0.85)",
         }}
       >
         {tiles.map((url, i) => (
@@ -54,7 +54,7 @@ export function Backdrop({ uploadUrls, servedUrls }: { uploadUrls: string[]; ser
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, oklch(0.13 0.05 291 / 0.75), oklch(0.13 0.05 291 / 0.92))",
+          background: "linear-gradient(180deg, oklch(0.13 0.05 291 / 0.5), oklch(0.13 0.05 291 / 0.82))",
         }}
       />
       <style>{`

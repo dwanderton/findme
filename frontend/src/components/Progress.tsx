@@ -42,26 +42,34 @@ export function Progress({ albumId, onReady }: { albumId: string; onReady: (s: P
   const views = stageViews(snap.stage, LABELS);
   const pct = snap.photosTotal ? Math.round((snap.photosDone / snap.photosTotal) * 1000) / 10 : 0;
 
+  const current = failed
+    ? { key: "failed", label: "indexing failed", state: "failed" as const }
+    : (views.find((v) => v.state === "active") ?? views[views.length - 1]);
+  const dotClass = current.state === "failed" ? "error" : current.state === "done" ? "idle" : "running";
+
   return (
     <div className="card" data-testid="progress">
-      {views.map((v) => (
-        <div key={v.key} className="mono" style={{ display: "flex", gap: 10, alignItems: "center", padding: "4px 0", fontSize: "0.8rem", color: v.state === "todo" ? "var(--muted)" : "var(--text)" }}>
-          <span className={`dot ${v.state === "active" ? "running" : v.state === "failed" ? "error" : v.state === "done" ? "idle" : "pending"}`} style={v.state === "done" ? { background: "var(--status-running)", animation: "none" } : undefined} />
-          <span style={{ minWidth: 190 }}>{v.label}</span>
-          {v.state === "active" && (
-            <span className="log-stream">
-              {snap.photosDone}/{snap.photosTotal} · {pct}%
-              {snap.facesFound ? ` · ${snap.facesFound} faces` : ""}
-              {eta.confident && eta.etaSec !== null ? ` · ~${eta.etaSec}s left` : ""}
-            </span>
-          )}
-        </div>
-      ))}
-      {failed && (
-        <p className="mono" style={{ color: "var(--status-error)", fontSize: "0.78rem", marginTop: 8 }}>
-          indexing failed. retry commit from the upload card.
-        </p>
-      )}
+      <div
+        key={current.key}
+        className="mono log-stream"
+        style={{ display: "flex", gap: 10, alignItems: "center", fontSize: "0.82rem" }}
+      >
+        <span
+          className={`dot ${dotClass}`}
+          style={current.state === "done" ? { background: "var(--status-running)" } : undefined}
+        />
+        <span>{current.label}</span>
+        {current.state === "active" && (
+          <span style={{ color: "var(--muted)" }}>
+            {snap.photosDone}/{snap.photosTotal} · {pct}%
+            {snap.facesFound ? ` · ${snap.facesFound} faces` : ""}
+            {eta.confident && eta.etaSec !== null ? ` · ~${eta.etaSec}s left` : ""}
+          </span>
+        )}
+        {current.state === "failed" && (
+          <span style={{ color: "var(--status-error)" }}>create a new album and retry</span>
+        )}
+      </div>
     </div>
   );
 }
