@@ -26,8 +26,7 @@ npm install && npm run dev   # http://localhost:3000
 ```
 
 The face engine runs on CPU locally (same models, same math as the GPU
-workers). Without a Google key, enrichment degrades honestly to absent
-place and weather states.
+workers). Without a Google key, place and weather show as absent.
 
 ## Tests
 

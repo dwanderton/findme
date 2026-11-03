@@ -203,7 +203,7 @@ button {
   .wx-rain, .wx-snow, .wx-thunder::before { animation: none; }
 }
 
-/* view transitions: quick telemetry-style swaps, no fireworks */
+/* view transitions */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.22s;
@@ -222,7 +222,7 @@ button {
   }
 }
 
-/* skeletons: staged machine state, not an anxious spinner */
+/* skeleton shimmer */
 .skeleton {
   border-radius: 8px;
   background: linear-gradient(90deg, var(--surface) 25%, oklch(0.32 0.04 291 / 0.55) 50%, var(--surface) 75%);

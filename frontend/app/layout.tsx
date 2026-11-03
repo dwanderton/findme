@@ -12,17 +12,17 @@ export const metadata: Metadata = {
     template: "%s · findMe",
   },
   description:
-    "Find yourself in a photo album. Face search on Runpod serverless GPUs; every match enriched with place, weather, camera settings, and a generated caption.",
+    "Find yourself in seconds. Face search on Runpod serverless GPUs; every match enriched with place, weather, camera settings, and a generated caption.",
   openGraph: {
     title: "findMe",
-    description: "Find yourself in a photo album.",
+    description: "Find yourself in seconds.",
     siteName: "findMe",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "findMe",
-    description: "Find yourself in a photo album.",
+    description: "Find yourself in seconds.",
   },
 };
 

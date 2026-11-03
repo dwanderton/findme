@@ -32,7 +32,7 @@ export default function OgImage() {
           <div style={{ fontSize: 96, fontWeight: 600 }}>findMe</div>
         </div>
         <div style={{ fontSize: 40, marginTop: 28, color: "#A79FC2" }}>
-          Find yourself in a photo album.
+          Find yourself in seconds
         </div>
         <div style={{ fontSize: 26, marginTop: 56, color: "#6E668A", fontFamily: "monospace" }}>
           face search on Runpod serverless · place + weather + camera enrichment · VLM captions
