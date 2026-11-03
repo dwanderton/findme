@@ -36,6 +36,27 @@ findme.app.factory:create_app` + `npm run dev`.
 8. Forced-failure demo: redeploy api with a bad Google key →
    `scripts/smoke.py --expect-degraded` stays green.
 
+## Image rollout (always forced)
+
+Runpod has no immediate-rollout flag: a container change cuts a release that
+rolls only as workers cycle, and a stale worker keeps serving the old image
+(retries reset its idle timer, so it can stick around indefinitely). The docs'
+"strict version consistency" procedure is the default here for every image
+update on fyn95actlrze1c:
+
+1. Push a new versioned tag (never `:latest`): `ghcr.io/dwanderton/findme/api:vN`.
+2. `update-endpoint` with the new image.
+3. `update-endpoint {"workers": {"min": 0, "max": 0}}` — terminates all
+   workers including stale ones and PAUSES the endpoint.
+4. Poll `list-endpoint-workers` until total = 0 (usually seconds).
+5. `update-endpoint {"workers": {"min": 0, "max": 2, "idleTimeout": 60}}`.
+6. Expect ~20-25 s gateway lag after unpause (first request may 409
+   ENDPOINT_PAUSED); verify with an authed request to a route that only
+   exists in the new image.
+
+Measured 2026-11-02 (v4→v5): drain instant, first post-restore request
+returned 200 in one attempt.
+
 ## Cost notes
 
 Flex min=0 everywhere: $0 idle. Standing cost = 20 GB volume ($1.40/mo).
