@@ -29,7 +29,7 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
           return;
         }
         try {
-          const r = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(q)}&session=${session.current}`);
+          const r = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(q)}&session=${session.current}&albumId=${albumId}`);
           const body = await r.json();
           setDegraded(Boolean(body.degraded));
           setSuggestions(body.suggestions ?? []);
@@ -39,7 +39,7 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
           setSuggestions([]);
         }
       }, 300),
-    [],
+    [albumId],
   );
 
   async function select(s: Suggestion) {
@@ -72,7 +72,7 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
   if (venue) {
     return (
       <div className="chip active" data-testid="venue-chip">
-        VENUE {venue.label}
+        venue {venue.label}
         <button className="mono" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }} onClick={() => void unlink()}>
           unlink
         </button>

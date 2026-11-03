@@ -36,10 +36,12 @@ def _status(e: ExifData, venue: dict | None, place: Place, weather: Weather) -> 
 
 
 class Enricher:
-    def __init__(self, root: Path, album_id: str, venue: dict | None = None):
+    def __init__(self, root: Path, album_id: str, venue: dict | None = None, trace=None, request_id: str = ""):
         self.cache = ClusterCache(root, album_id)
         self.venue = venue
         self.uncached_used = 0
+        self.trace = trace
+        self.request_id = request_id
 
     async def enrich(self, client: httpx.AsyncClient, exif: ExifData) -> Enriched:
         venue = self.venue
@@ -71,10 +73,10 @@ class Enricher:
 
         tasks = {}
         if need_place:
-            tasks["place"] = reverse_geocode(client, lat, lon)
+            tasks["place"] = reverse_geocode(client, lat, lon, trace=self.trace, request_id=self.request_id)
         if need_weather:
             basis = "photo-gps" if exif.gps_present else "venue-location"
-            tasks["weather"] = weather_at(client, lat, lon, exif.taken_at, basis=basis)
+            tasks["weather"] = weather_at(client, lat, lon, exif.taken_at, basis=basis, trace=self.trace, request_id=self.request_id)
         if tasks:
             self.uncached_used += 1
             results = await asyncio.gather(*tasks.values())

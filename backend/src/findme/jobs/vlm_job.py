@@ -83,7 +83,7 @@ async def run_vlm_job(
                 skipped += 1
                 continue
             try:
-                record = await vlm.caption_photo(client, pid, p.read_bytes())
+                record = await vlm.caption_photo(client, pid, p.read_bytes(), trace=trace)
             finally:
                 release_photo(vlm.dir, pid)
             if record.get("status") == "ready":

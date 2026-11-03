@@ -44,6 +44,13 @@ class TraceWriter:
         self._count += 1
 
 
+def writer_for(root: Path, album_id: str | None, writer_id: str) -> TraceWriter | None:
+    """TraceWriter for an existing album, else None — avoids creating dirs for bogus ids."""
+    if not album_id or not (root / "albums" / album_id / "meta.json").exists():
+        return None
+    return TraceWriter(root, album_id, writer_id)
+
+
 def read_merged(root: Path, album_id: str, cursor: int = 0, limit: int = 200) -> tuple[list[dict], int]:
     d = root / "albums" / album_id / "trace"
     events: list[dict] = []

@@ -2,8 +2,15 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
+import findme.routes.staticmap as staticmap_mod
 from findme.app.factory import create_app
 from findme.routes.staticmap import STATIC_URL
+from findme.upstream import Circuit
+
+
+@pytest.fixture(autouse=True)
+def fresh_circuit():
+    staticmap_mod.circuit = Circuit("staticmap")
 
 
 @pytest.fixture
@@ -29,6 +36,15 @@ def test_upstream_failure(client):
     respx.get(STATIC_URL).respond(status_code=403, content=b"denied", headers={"content-type": "text/plain"})
     r = client.get("/staticmap", params={"lat": 1.0, "lon": 2.0})
     assert r.status_code == 502
+    assert r.json()["error"]["code"] == "UPSTREAM_MAPS"
+    assert staticmap_mod.circuit.state == "open"
+
+
+def test_circuit_open_short_circuits(client):
+    staticmap_mod.circuit.trip()
+    r = client.get("/staticmap", params={"lat": 1.0, "lon": 2.0})
+    assert r.status_code == 502
+    assert r.json()["error"]["code"] == "UPSTREAM_MAPS"
 
 
 def test_no_key(tmp_path, monkeypatch):

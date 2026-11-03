@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from findme import settings
 from findme.errors import ApiError
+from findme.trace import writer_for
 
 
 def create_app(root: Path | None = None) -> FastAPI:
@@ -24,7 +25,21 @@ def create_app(root: Path | None = None) -> FastAPI:
     )
 
     @app.exception_handler(ApiError)
-    async def api_error_handler(_: Request, exc: ApiError):
+    async def api_error_handler(request: Request, exc: ApiError):
+        rid = request.headers.get("x-request-id", "")
+        if rid:
+            exc.request_id = rid
+        album_id = request.path_params.get("album_id") or request.query_params.get("albumId")
+        trace = writer_for(request.app.state.root, album_id, "api")
+        if trace:
+            trace.emit(
+                "api",
+                f"error.{exc.code}",
+                level="error" if exc.status >= 500 else "warn",
+                request_id=exc.request_id,
+                status=exc.status,
+                path=request.url.path,
+            )
         return JSONResponse(status_code=exc.status, content=exc.envelope())
 
     @app.get("/health")

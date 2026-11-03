@@ -24,13 +24,14 @@ def _compose(results: list[dict]) -> str | None:
     return results[0].get("formatted_address") if results else None
 
 
-async def reverse_geocode(client: httpx.AsyncClient, lat: float, lon: float) -> Place:
+async def reverse_geocode(client: httpx.AsyncClient, lat: float, lon: float, trace=None, request_id: str = "") -> Place:
     key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
     if not key:
         return Place(present=False, reason="no-api-key")
     try:
         data = await get_json(
-            client, circuit, GEOCODE_URL, {"latlng": f"{lat},{lon}", "key": key}
+            client, circuit, GEOCODE_URL, {"latlng": f"{lat},{lon}", "key": key},
+            trace=trace, request_id=request_id,
         )
     except UpstreamDown:
         return Place(present=False, reason="upstream-failed")

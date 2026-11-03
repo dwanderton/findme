@@ -6,7 +6,7 @@ import httpx
 from fastapi import APIRouter, Request
 
 from findme.albums import gps_coverage, load_meta
-from findme.enrich import Enricher
+from findme.enrich import MAX_UNCACHED_PER_FIND, Enricher
 from findme.errors import ApiError
 from findme.exif import camera_panel
 from findme.faces import load_refs
@@ -50,10 +50,11 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
     if threshold == "strong":
         matches = [m for m in matches if m.band == "strong"]
 
+    rid = request.headers.get("x-request-id", "")
     trace = TraceWriter(root, albumId, "find")
-    trace.emit("find", "search.done", matches=len(matches), refs=refs_used)
+    trace.emit("find", "search.done", request_id=rid, matches=len(matches), refs=refs_used)
 
-    enricher = Enricher(root, albumId, venue=meta.get("venue"))
+    enricher = Enricher(root, albumId, venue=meta.get("venue"), trace=trace, request_id=rid)
     vlm = VlmClient(root, albumId)
     vlm_available = bool(os.environ.get("VLM_BASE_URL")) or getattr(request.app.state, "run_vlm", None)
 
@@ -103,6 +104,8 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
                     "enrichment": {"status": enriched.status},
                 }
             )
+
+    trace.emit("find", "enrich.done", request_id=rid, budgetUsed=enricher.uncached_used, budgetMax=MAX_UNCACHED_PER_FIND, **e_summary)
 
     runner = getattr(request.app.state, "run_vlm", None)
     if pending_vlm and runner:
