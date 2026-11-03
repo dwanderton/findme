@@ -10,11 +10,13 @@ import {
   type AnyEvent,
   type Filter,
 } from "@/lib/debugLog";
+import { watchEngagement } from "@/lib/engagement";
 
 const FILTERS: Filter[] = ["all", "client", "server", "external", "errors"];
 
 export function DebugConsole({ albumId }: { albumId?: string }) {
   const [open, setOpen] = useState(false);
+  const [engaged, setEngaged] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
   const [highlight, setHighlight] = useState<string | undefined>(undefined);
   const [serverEvents, setServerEvents] = useState<AnyEvent[]>([]);
@@ -68,14 +70,26 @@ export function DebugConsole({ albumId }: { albumId?: string }) {
 
   useEffect(() => {
     if (!open) return;
-    void refresh();
-    const t = setInterval(refresh, 2000);
+    setEngaged(true);
+    return watchEngagement(setEngaged);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     document.body.style.paddingBottom = "44vh";
     return () => {
-      clearInterval(t);
       document.body.style.paddingBottom = "";
     };
-  }, [open, refresh]);
+  }, [open]);
+
+  // Poll only while the console is open and the user is engaged (tab visible,
+  // interaction within the last 5 minutes) — the cursor catches up on resume.
+  useEffect(() => {
+    if (!open || !engaged) return;
+    void refresh();
+    const t = setInterval(refresh, 2000);
+    return () => clearInterval(t);
+  }, [open, engaged, refresh]);
 
   if (!open) return null;
 
