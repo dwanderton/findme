@@ -3,12 +3,12 @@
 Upload an album, enroll a selfie, get back every photo you appear in. Each
 match carries where it was taken (Google Geocoding), the weather at capture
 time (Open-Meteo), the camera settings that shot it (EXIF), and a generated
-caption, tags, and story (Qwen2.5-VL on Runpod).
+caption and tags (Qwen2.5-VL on Runpod).
 
 Face detection (SCRFD) and embedding (ArcFace, 512-D) run on Runpod serverless
-RTX 4090 workers, scale-to-zero. Matching uses a reference set per user
-(1 selfie required, up to 5) with bootstrap re-scoring: confident hits become
-extra references and everything re-scores by mean of top-3 similarities.
+GPU workers, scale-to-zero. Matching uses a reference set per user with
+bootstrap re-scoring: confident hits become extra references and everything
+re-scores by mean of top-3 similarities.
 Bands: strong at 0.45 cosine, possible at 0.37.
 
 ## Run locally (no cloud, no keys)
@@ -26,9 +26,8 @@ npm install && npm run dev   # http://localhost:3000
 ```
 
 The face engine runs on CPU locally (same models, same math as the GPU
-workers). Without a Google key, enrichment degrades honestly to
-"metadata scrubbed" / "lookup failed" states; that degradation is part of the
-product, not a crash.
+workers). Without a Google key, enrichment degrades honestly to absent
+place and weather states.
 
 ## Tests
 
@@ -64,25 +63,9 @@ cd frontend && npm run gen-types
 
 ## Architecture
 
-```
-browser  — client preprocess: EXIF out (exifr) -> 2048px resize -> batched upload
-   |
-next.js proxy (vercel) — rate buckets, error envelope, SSE relay, x-request-id
-   |
-runpod serverless (US-IL-1, flash)
-   /upload /enroll /find /status /debug (LB) · index CPU->GPU (QB) · vlm (QB, worker-vllm)
-   |
-network volume — photos, thumbs, parquet face shards, enrichment cluster cache,
-                 vlm records, per-writer trace files
-   |
-external (server-side only) — Google Geocoding + Places · Open-Meteo
-```
+![findMe architecture](docs/architecture.svg)
 
-Key decisions and their verification live in `plans/` (gitignored working
-docs): the enrichment failure ladder, spatiotemporal cluster cache (place
-reused within a quarter mile, weather within a mile and 30 minutes), the
-match-only external-call invariant, and the live-tested finding that Runpod's
-S3 API lacks CORS (hence the upload endpoint owns ingest).
+Regenerate: `d2 docs/architecture.d2 docs/architecture.svg`
 
 ## Deploy
 
@@ -91,11 +74,3 @@ env table: VLM_BASE_URL, VLM_MODEL, RUNPOD_API_KEY on-worker, CORS_ORIGINS,
 DEBUG_UI). Needs `RUNPOD_API_KEY` and `GOOGLE_MAPS_API_KEY`;
 Vercel hosts the frontend. Standing cost when idle: the 20 GB volume
 ($1.40/mo); all compute is flex min=0.
-
-## Honest limitations
-
-- Find-grants and rate buckets are in-memory per worker (fine at this scale;
-  volume-backed grants are the production fix).
-- Album photos are stored as 2048 px processed copies; downloads say so.
-- InsightFace model licenses are research/non-commercial.
-- Full audit: [AUDIT.md](AUDIT.md).
