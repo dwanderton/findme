@@ -3,7 +3,7 @@ type Bucket = { tokens: number; last: number };
 const buckets = new Map<string, Bucket>();
 
 export const LIMITS: Record<string, { perMin: number }> = {
-  default: { perMin: 30 },
+  default: { perMin: 120 },
   enroll: { perMin: 5 },
   places: { perMin: 10 },
 };

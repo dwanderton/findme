@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -28,6 +30,17 @@ def create_app(root: Path | None = None) -> FastAPI:
     @app.get("/health")
     async def health():
         return {"status": "ok"}
+
+    if os.environ.get("FINDME_INLINE_JOBS", "").lower() == "true":
+        from findme.jobs.index_cpu import run_cpu_stage
+        from findme.jobs.index_gpu import run_all_batches
+
+        def inline_runner(root: Path, album_id: str) -> dict:
+            result = run_cpu_stage(root, album_id)
+            threading.Thread(target=run_all_batches, args=(root, album_id), daemon=True).start()
+            return result
+
+        app.state.run_index = inline_runner
 
     from findme.routes import album, delete, enroll, find, media, places, status, upload
 
