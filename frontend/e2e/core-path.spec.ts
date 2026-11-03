@@ -31,7 +31,7 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   await firstCard.click();
   const panel = page.getByTestId("panel");
   await expect(panel).toBeVisible();
-  await expect(panel.getByText("PLACE")).toBeVisible();
+  await expect(panel.getByText("LOCATION")).toBeVisible();
   await expect(panel.getByText("WEATHER")).toBeVisible();
   await expect(panel.getByText("CAMERA")).toBeVisible();
 
