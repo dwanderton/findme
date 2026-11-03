@@ -4,12 +4,28 @@ import os
 
 import httpx
 
-from findme.upstream import Circuit, UpstreamDown, get_json
+from findme.upstream import Circuit, UpstreamDown
 
-AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
-DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json"
+AUTOCOMPLETE_URL = "https://places.googleapis.com/v1/places:autocomplete"
+DETAILS_URL = "https://places.googleapis.com/v1/places"
 
 circuit = Circuit("places")
+
+TIMEOUT_S = 3.0
+
+
+async def _post_json(client: httpx.AsyncClient, url: str, headers: dict, body: dict) -> dict:
+    if circuit.state == "open":
+        raise UpstreamDown("places circuit open")
+    try:
+        resp = await client.post(url, headers=headers, json=body, timeout=TIMEOUT_S)
+        if resp.status_code >= 400:
+            circuit.trip()
+            raise UpstreamDown(f"places {resp.status_code}")
+        return resp.json()
+    except httpx.HTTPError as e:
+        circuit.trip()
+        raise UpstreamDown(str(e))
 
 
 async def autocomplete(client: httpx.AsyncClient, query: str, session: str) -> dict:
@@ -17,40 +33,45 @@ async def autocomplete(client: httpx.AsyncClient, query: str, session: str) -> d
     if not key:
         return {"suggestions": [], "degraded": "upstream-failed"}
     try:
-        data = await get_json(
+        data = await _post_json(
             client,
-            circuit,
             AUTOCOMPLETE_URL,
-            {"input": query, "sessiontoken": session, "key": key},
+            {"X-Goog-Api-Key": key},
+            {"input": query, "sessionToken": session},
         )
     except UpstreamDown:
         return {"suggestions": [], "degraded": "upstream-failed"}
-    if data.get("status") not in ("OK", "ZERO_RESULTS"):
-        return {"suggestions": [], "degraded": "upstream-failed"}
-    return {
-        "suggestions": [
-            {"placeId": p["place_id"], "label": p.get("description", "")}
-            for p in data.get("predictions", [])[:8]
-        ]
-    }
+    out = []
+    for s in data.get("suggestions", [])[:8]:
+        p = s.get("placePrediction") or {}
+        place_id = p.get("placeId")
+        label = (p.get("text") or {}).get("text", "")
+        if place_id:
+            out.append({"placeId": place_id, "label": label})
+    return {"suggestions": out}
 
 
 async def details(client: httpx.AsyncClient, place_id: str, session: str) -> dict | None:
     key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
     if not key:
         return None
+    if circuit.state == "open":
+        return None
+    headers = {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "id,displayName,formattedAddress,location",
+    }
     try:
-        data = await get_json(
-            client,
-            circuit,
-            DETAILS_URL,
-            {"place_id": place_id, "sessiontoken": session, "fields": "name,formatted_address,geometry", "key": key},
-        )
-    except UpstreamDown:
+        resp = await client.get(f"{DETAILS_URL}/{place_id}", headers=headers, params={"sessionToken": session}, timeout=TIMEOUT_S)
+        if resp.status_code >= 400:
+            circuit.trip()
+            return None
+        data = resp.json()
+    except httpx.HTTPError:
+        circuit.trip()
         return None
-    result = data.get("result") or {}
-    loc = (result.get("geometry") or {}).get("location") or {}
-    if "lat" not in loc:
+    loc = data.get("location") or {}
+    if "latitude" not in loc:
         return None
-    label = result.get("name") or result.get("formatted_address") or place_id
-    return {"placeId": place_id, "label": label, "lat": loc["lat"], "lon": loc["lng"]}
+    label = (data.get("displayName") or {}).get("text") or data.get("formattedAddress") or place_id
+    return {"placeId": place_id, "label": label, "lat": loc["latitude"], "lon": loc["longitude"]}
