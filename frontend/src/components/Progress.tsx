@@ -58,7 +58,7 @@ export function Progress({ albumId, onReady }: { albumId: string; onReady: (s: P
   const dotClass = view.stage === "failed" ? "error" : view.stage === "ready" ? "idle" : "running";
 
   return (
-    <div className="card" data-testid="progress">
+    <div data-testid="progress">
       <div
         key={view.stage}
         className="mono log-stream"

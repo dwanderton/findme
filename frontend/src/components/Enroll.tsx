@@ -31,7 +31,7 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
   }
 
   return (
-    <div className="card" data-testid="enroll">
+    <div data-testid="enroll">
       <div
         role="button"
         tabIndex={0}

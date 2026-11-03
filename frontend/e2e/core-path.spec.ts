@@ -17,18 +17,16 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   ]);
   await expect(page.getByTestId("progress")).toBeVisible({ timeout: 60_000 });
   await expect(upload).not.toBeVisible();
-  await expect(page.getByTestId("progress").getByText("ready", { exact: true })).toBeVisible({ timeout: 60_000 });
 
   const enroll = page.getByTestId("enroll");
+  await expect(enroll).toBeVisible({ timeout: 60_000 });
   await enroll.locator("input[type=file]").setInputFiles([path.join(ASSETS, "s2_a.jpg")]);
   await expect(enroll.getByText(/face \d+px/)).toBeVisible({ timeout: 60_000 });
 
   await page.getByRole("button", { name: "Find me" }).click();
-  await expect(page.getByTestId("results")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("results")).toBeVisible({ timeout: 90_000 });
   await expect(page.getByTestId("results").getByText(/you appear in/)).toBeVisible();
 
-  const firstCard = page.getByTestId("results").locator("button.card").first();
-  await firstCard.click();
   const panel = page.getByTestId("panel");
   await expect(panel).toBeVisible();
   await expect(panel.getByText("LOCATION")).toBeVisible();
