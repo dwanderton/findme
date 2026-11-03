@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { use, useEffect, useState } from "react";
 
 import { Backdrop } from "@/components/Backdrop";
@@ -54,7 +55,9 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
       <Banners />
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 20 }}>
         <h1 style={{ fontSize: "1.3rem" }}>
-          <span style={{ color: "var(--primary)" }}>▲</span> {COPY.appName}
+          <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>
+            <span style={{ color: "var(--primary)" }}>▲</span> {COPY.appName}
+          </Link>
         </h1>
         <span className="mono" style={{ color: "var(--muted)", fontSize: "0.7rem" }}>
           album {albumId.slice(0, 8)}
