@@ -11,7 +11,7 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   await page.waitForURL(/\/a\//);
 
   const upload = page.getByTestId("upload");
-  await upload.locator("input[type=file]").setInputFiles([
+  await upload.getByTestId("photo-input").setInputFiles([
     path.join(ASSETS, "s2_a.jpg"),
     path.join(ASSETS, "s2_b.jpg"),
   ]);

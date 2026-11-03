@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { commitAlbum, uploadAll, type Rejection, type UploadProgress } from "@/lib/api";
 import { COPY, rejectionLine } from "@/lib/copy";
+import { filesFromDataTransfer } from "@/lib/folder";
 import { STAGE_DWELL_MS } from "@/lib/pacing";
-import { preprocessFile, type PreppedPhoto } from "@/lib/preprocess";
+import { MAX_ALBUM_PHOTOS, preprocessFile, type PreppedPhoto } from "@/lib/preprocess";
 
 type Phase = "idle" | "preprocessing" | "uploading" | "committing" | "done" | "error";
 
@@ -20,11 +21,13 @@ export function Upload({
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [prepped, setPrepped] = useState(0);
+  const [prepTotal, setPrepTotal] = useState(0);
   const [gpsFound, setGpsFound] = useState(0);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [rejected, setRejected] = useState<Rejection[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
   const nextAt = useRef(0);
 
@@ -45,13 +48,17 @@ export function Upload({
     setPhase("error");
   }
 
-  async function handleFiles(list: FileList | null) {
-    if (!list || list.length === 0) return;
-    const files = Array.from(list).filter((f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name));
+  async function handleFiles(list: File[]) {
+    const files = list.filter((f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name));
     if (!files.length) return;
+    if (files.length > MAX_ALBUM_PHOTOS) {
+      failNow(`${files.length} images selected; an album holds up to ${MAX_ALBUM_PHOTOS}.`);
+      return;
+    }
     nextAt.current = 0;
     setMessage(null);
     setRejected([]);
+    setPrepTotal(files.length);
     schedule(() => setPhase("preprocessing"));
     const photos: PreppedPhoto[] = [];
     let gps = 0;
@@ -98,7 +105,8 @@ export function Upload({
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
-          void handleFiles(e.dataTransfer.files);
+          const pending = filesFromDataTransfer(e.dataTransfer);
+          void pending.then((files) => handleFiles(files));
         }}
         style={{
           border: "1px dashed var(--border)",
@@ -109,10 +117,10 @@ export function Upload({
           color: "var(--muted)",
         }}
       >
-        {phase === "idle" ? "Drop photos or click to choose" : null}
+        {phase === "idle" ? "Drop photos or a folder, or click to choose" : null}
         {phase === "preprocessing" && (
           <span className="mono log-stream">
-            {COPY.uploadPreflight} {prepped} · gps found in {gpsFound}
+            {COPY.uploadPreflight} {prepped} / {prepTotal} · gps found in {gpsFound}
           </span>
         )}
         {phase === "uploading" && progress && (
@@ -138,13 +146,43 @@ export function Upload({
           )}
         </ul>
       )}
+      {phase === "idle" && (
+        <button
+          type="button"
+          className="mono"
+          data-testid="folder-cta"
+          onClick={() => folderInputRef.current?.click()}
+          style={{
+            marginTop: 8,
+            background: "none",
+            border: "none",
+            padding: 0,
+            color: "var(--muted)",
+            cursor: "pointer",
+            textDecoration: "underline",
+            fontSize: "0.72rem",
+          }}
+        >
+          {COPY.uploadFolderCta}
+        </button>
+      )}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
         multiple
         hidden
-        onChange={(e) => void handleFiles(e.target.files)}
+        data-testid="photo-input"
+        onChange={(e) => void handleFiles(Array.from(e.target.files ?? []))}
+      />
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        hidden
+        data-testid="folder-input"
+        {...{ webkitdirectory: "" }}
+        onChange={(e) => void handleFiles(Array.from(e.target.files ?? []))}
       />
     </div>
   );
