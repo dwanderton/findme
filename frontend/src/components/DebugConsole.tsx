@@ -113,19 +113,21 @@ export function DebugConsole({ albumId }: { albumId?: string }) {
             req {highlight.slice(0, 8)} ×
           </button>
         )}
-        <span style={{ marginLeft: "auto", color: "var(--muted)" }}>
-          {Object.entries(circuits).length > 0
-            ? Object.entries(circuits)
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+          {Object.entries(circuits).length > 0 && (
+            <span style={{ color: "var(--muted)" }}>
+              {Object.entries(circuits)
                 .map(([name, state]) => `${name}: ${state}`)
-                .join(" · ")
-            : "circuits: ?"}
-        </span>
-        <button
-          className="chip"
-          onClick={() => void navigator.clipboard.writeText(JSON.stringify({ events: merged, snapshot }, null, 2))}
-        >
-          copy trace
-        </button>
+                .join(" · ")}
+            </span>
+          )}
+          <button
+            className="chip"
+            onClick={() => void navigator.clipboard.writeText(JSON.stringify({ events: merged, snapshot }, null, 2))}
+          >
+            copy trace
+          </button>
+        </div>
       </div>
       <div style={{ overflowY: "auto", padding: "6px 14px", flex: 1 }}>
         {visible.map((e, i) => (
