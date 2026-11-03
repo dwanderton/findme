@@ -115,8 +115,13 @@ First VLM cold start downloads ~6 GB of weights into the volume's HF cache
 cd frontend && vercel deploy --prod
 ```
 
-Vercel env (server-side only, both used by the `/api` proxy):
-`BACKEND_URL=https://<api-endpoint-id>.api.runpod.ai` and `RUNPOD_API_KEY`.
+Vercel env (server-side only): `BACKEND_URL=https://<api-endpoint-id>.api.runpod.ai`
+and `RUNPOD_API_KEY` (used by the `/api` proxy), plus optionally
+`VLM_BASE_URL` (same value as on the api endpoint). When set, the landing
+page's `/api/warmup` route also warms the VLM endpoint with a one-token
+async job; without it only the api endpoint is warmed. Warmup is throttled
+to one upstream hit per 60 s per instance; note each VLM warm bills GPU
+seconds until its 120 s idle timeout.
 
 Then set `CORS_ORIGINS` on `findme-api` to the Vercel URL. Env edits cut a
 release that only rolls as workers cycle; use the forced rollout below to
@@ -171,4 +176,4 @@ back to 0 after (checklist, not infra).
 | Secrets | `findme-google-maps-api-key`, `findme-runpod-api-key` |
 | Registry credential (ghcr) | `cmw01ek13007vydkiux2k0l2s` |
 | Image | `ghcr.io/dwanderton/findme/api:v7` |
-| Frontend | https://findme-mocha.vercel.app (Vercel project "findme"; env `BACKEND_URL` + `RUNPOD_API_KEY`) |
+| Frontend | https://findme-mocha.vercel.app (Vercel project "findme"; env `BACKEND_URL` + `RUNPOD_API_KEY` + `VLM_BASE_URL`) |
