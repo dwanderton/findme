@@ -8,6 +8,7 @@ export const COPY = {
   noFace: "No face found, try another.",
   checkingFace: "checking face…",
   uploadPreflight: "preprocessing",
+  uploadFolderCta: "or choose an entire folder",
   uploadRetry: "retry failed",
   commitCta: "Index this album",
   stageReceived: "received",
