@@ -75,6 +75,8 @@ def run_cpu_stage(root: Path, album_id: str) -> dict:
         if done % 25 == 0:
             write_counter(root, album_id, "extracting", "cpu", {"photosDone": done, "photosTotal": len(kept)})
 
+    # Original filenames for the rejection report, captured before the meta entries go away.
+    names = {pid: meta["photos"].get(pid, {}).get("name") or pid for pid in dropped + failures}
     for photo_id in dropped + failures:
         meta["photos"].pop(photo_id, None)
         (photos_dir / f"{photo_id}.jpg").unlink(missing_ok=True)
@@ -88,7 +90,7 @@ def run_cpu_stage(root: Path, album_id: str) -> dict:
     trace.emit("cpu-qb", "extract.done", accepted=len(kept), dropped=len(dropped), failed=len(failures))
     return {
         "accepted": len(kept),
-        "rejected": [{"name": pid, "reason": "duplicate"} for pid in dropped]
-        + [{"name": pid, "reason": "undecodable"} for pid in failures],
+        "rejected": [{"name": names[pid], "reason": "duplicate"} for pid in dropped]
+        + [{"name": names[pid], "reason": "undecodable"} for pid in failures],
         "batches": len(batches),
     }

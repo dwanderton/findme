@@ -1,11 +1,14 @@
 import type { PreppedPhoto } from "./preprocess";
 import { planBatches } from "./preprocess";
 
+export type Rejection = { name: string; reason: string };
+
 export type UploadProgress = {
   uploaded: number;
   total: number;
   bytesSent: number;
   failed: string[];
+  rejected: Rejection[];
 };
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -28,7 +31,7 @@ export async function createAlbum(photoCount: number) {
   });
 }
 
-async function sendBatch(albumId: string, batch: PreppedPhoto[], attempt = 0): Promise<void> {
+async function sendBatch(albumId: string, batch: PreppedPhoto[], attempt = 0): Promise<Rejection[]> {
   const form = new FormData();
   form.set("albumId", albumId);
   batch.forEach((p, i) => {
@@ -40,6 +43,8 @@ async function sendBatch(albumId: string, batch: PreppedPhoto[], attempt = 0): P
     if (attempt < 2) return sendBatch(albumId, batch, attempt + 1);
     throw new Error(`batch failed: HTTP ${r.status}`);
   }
+  const body = await r.json().catch(() => null);
+  return (body?.rejected as Rejection[] | undefined) ?? [];
 }
 
 export async function uploadAll(
@@ -49,13 +54,14 @@ export async function uploadAll(
   concurrency = 6,
 ): Promise<UploadProgress> {
   const batches = planBatches(photos);
-  const state: UploadProgress = { uploaded: 0, total: photos.length, bytesSent: 0, failed: [] };
+  const state: UploadProgress = { uploaded: 0, total: photos.length, bytesSent: 0, failed: [], rejected: [] };
   let next = 0;
   async function worker() {
     while (next < batches.length) {
       const batch = batches[next++];
       try {
-        await sendBatch(albumId, batch);
+        const rejected = await sendBatch(albumId, batch);
+        state.rejected.push(...rejected);
         state.uploaded += batch.length;
         state.bytesSent += batch.reduce((s, p) => s + p.blob.size, 0);
       } catch {

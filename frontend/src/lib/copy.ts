@@ -31,6 +31,16 @@ export const COPY = {
   downloadNote: "zip contains processed photos plus findme.json with full provenance",
 } as const;
 
+export const REJECT_REASONS: Record<string, string> = {
+  UNSUPPORTED_MEDIA: "not a supported image format",
+  duplicate: "duplicate of another photo",
+  undecodable: "file could not be read",
+};
+
+export function rejectionLine(r: { name: string; reason: string }): string {
+  return `${r.name}: ${REJECT_REASONS[r.reason] ?? r.reason}`;
+}
+
 export const BANNED_PATTERNS: RegExp[] = [
   /—/,
   /\bdelve\b/i,
