@@ -18,6 +18,8 @@ import {
 } from "@/lib/results";
 
 export function Results({ albumId, userId, onThumbs }: { albumId: string; userId: string; onThumbs?: (urls: string[]) => void }) {
+  const onThumbsRef = useRef(onThumbs);
+  onThumbsRef.current = onThumbs;
   const [resp, setResp] = useState<FindResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [band, setBand] = useState<"strong" | "all">("all");
@@ -30,7 +32,7 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
       const r = await apiJson<FindResponse>(`find?userId=${userId}&albumId=${albumId}&threshold=possible`);
       setResp(r);
       setError(null);
-      onThumbs?.(r.matches.map((m) => `/api${m.thumbUrl.replace(/^\//, "/")}`));
+      onThumbsRef.current?.(r.matches.map((m) => `/api${m.thumbUrl}`));
       if (shouldRepollVlm(r, attempts.current)) {
         attempts.current += 1;
         setTimeout(load, 2000 + attempts.current * 500);
@@ -38,7 +40,7 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
     } catch (e) {
       setError(e instanceof Error ? e.message : "find failed");
     }
-  }, [albumId, userId, onThumbs]);
+  }, [albumId, userId]);
 
   useEffect(() => {
     void load();
