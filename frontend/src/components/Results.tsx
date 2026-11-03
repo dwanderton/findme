@@ -320,9 +320,12 @@ function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; o
 
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {camera.length > 0 && (
-          <div className="mono" style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
-            {camera.map((line) => (
-              <span key={line}>{line}</span>
+          <div className="mono" style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 6 }}>
+            {camera.map((f) => (
+              <div key={f.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                <span style={{ color: "var(--muted)", fontSize: "0.68rem", letterSpacing: "0.06em" }}>{f.label}</span>
+                <span style={{ textAlign: "right" }}>{f.value}</span>
+              </div>
             ))}
           </div>
         )}
