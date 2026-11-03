@@ -21,6 +21,33 @@ const cardLabel: React.CSSProperties = {
   marginBottom: 10,
 };
 
+function ResultsSkeleton({ userId }: { userId: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="results-skeleton">
+      <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
+        enrolled {userId.slice(0, 8)} · waiting for index
+      </p>
+      <div className="skeleton" style={{ width: "40%", height: 16 }} />
+      <div style={{ display: "flex", gap: 8 }}>
+        <div className="skeleton" style={{ width: 56, height: 26, borderRadius: 999 }} />
+        <div className="skeleton" style={{ width: 72, height: 26, borderRadius: 999 }} />
+        <div className="skeleton" style={{ width: 64, height: 26, borderRadius: 999 }} />
+      </div>
+      <div className="skeleton" style={{ width: "100%", height: 320 }} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}>
+        <div className="skeleton" style={{ height: 230 }} />
+        <div className="skeleton" style={{ height: 230 }} />
+        <div className="skeleton" style={{ height: 230 }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="skeleton" style={{ aspectRatio: "1" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AlbumPage({ params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = use(params);
   const [committed, setCommitted] = useState(false);
@@ -78,11 +105,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
             <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
           </section>
         )}
-        {userId && !ready && (
-          <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
-            enrolled {userId.slice(0, 8)} · waiting for index
-          </p>
-        )}
+        {userId && !ready && <ResultsSkeleton userId={userId} />}
         {ready && !userId && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>2 · YOU</span>

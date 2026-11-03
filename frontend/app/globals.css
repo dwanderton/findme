@@ -221,3 +221,17 @@ button {
     animation: none !important;
   }
 }
+
+/* skeletons: staged machine state, not an anxious spinner */
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface) 25%, oklch(0.32 0.04 291 / 0.55) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+@keyframes skeleton-shimmer {
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
