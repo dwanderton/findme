@@ -95,9 +95,29 @@ button {
 
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .dot.running { background: var(--status-running); animation: pulse-running 2s ease-in-out infinite; }
-.dot.pending { background: var(--status-pending); }
+.dot.pending { background: var(--status-pending); position: relative; }
+.dot.pending::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
 .dot.error { background: var(--status-error); }
 .dot.idle { background: var(--muted); animation: none; }
+
+@keyframes ping {
+  75%, 100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* in-flight label dots: "", ".", "..", "..." (mono chip, so 1 step = 1ch) */
+.ellipsis-anim { display: inline-block; width: 0; overflow: hidden; white-space: nowrap; animation: ellipsis 1.2s steps(4, jump-none) infinite; }
+.ellipsis-anim::after { content: "..."; }
+@keyframes ellipsis {
+  from { width: 0; }
+  to { width: 3ch; }
+}
 
 @keyframes pulse-running {
   0%, 100% { opacity: 1; }
@@ -124,4 +144,6 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .ellipsis-anim { width: 3ch; }
+  .dot.pending::after { display: none; }
 }

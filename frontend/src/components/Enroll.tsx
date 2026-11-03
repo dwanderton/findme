@@ -21,7 +21,17 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
     }
     const isAppend = state.userId !== null;
     if (isAppend) form.set("userId", state.userId!);
-    const r = await fetch("/api/enroll", { method: isAppend ? "PATCH" : "POST", body: form });
+    let r: Response;
+    try {
+      r = await fetch("/api/enroll", {
+        method: isAppend ? "PATCH" : "POST",
+        body: form,
+        signal: AbortSignal.timeout(90_000),
+      });
+    } catch {
+      dispatch({ type: "failure", message: COPY.enrollNoResponse });
+      return;
+    }
     const body = await r.json().catch(() => null);
     if (!r.ok) {
       dispatch({ type: "failure", message: body?.error?.message ?? COPY.noFace, selfie: body?.error?.selfie });
@@ -62,6 +72,7 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
               {c.state === "checking" && (
                 <>
                   <span className="dot pending" /> {COPY.checkingFace}
+                  <span className="ellipsis-anim" aria-hidden="true" />
                 </>
               )}
               {c.state === "ok" && (
