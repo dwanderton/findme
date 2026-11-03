@@ -37,6 +37,8 @@ export async function forward(req: Request, path: string): Promise<Response> {
   }
   const runpodKey = process.env.RUNPOD_API_KEY;
   if (runpodKey) headers.set("authorization", `Bearer ${runpodKey}`);
+  const requestId = crypto.randomUUID();
+  headers.set("x-request-id", requestId);
 
   let upstream: Response;
   try {
@@ -59,5 +61,6 @@ export async function forward(req: Request, path: string): Promise<Response> {
     const v = upstream.headers.get(h);
     if (v) respHeaders.set(h, v);
   }
+  respHeaders.set("x-request-id", requestId);
   return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
 }
