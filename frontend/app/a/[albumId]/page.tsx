@@ -5,6 +5,7 @@ import { use, useState } from "react";
 import { Backdrop } from "@/components/Backdrop";
 import { Enroll } from "@/components/Enroll";
 import { Progress } from "@/components/Progress";
+import { AlbumActions, Results } from "@/components/Results";
 import { Upload } from "@/components/Upload";
 import { COPY } from "@/lib/copy";
 
@@ -29,11 +30,13 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />
         {committed && <Progress albumId={albumId} onReady={() => setReady(true)} />}
         <Enroll onFind={(uid) => setUserId(uid)} />
-        {userId && (
+        {userId && !ready && (
           <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
-            enrolled {userId.slice(0, 8)}{ready ? " · index ready" : " · waiting for index"} · results UI lands next
+            enrolled {userId.slice(0, 8)} · waiting for index
           </p>
         )}
+        {userId && ready && <Results albumId={albumId} userId={userId} onThumbs={() => {}} />}
+        <AlbumActions albumId={albumId} userId={userId} />
       </div>
     </main>
   );
