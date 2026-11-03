@@ -64,7 +64,7 @@ export function Upload({
   }
 
   return (
-    <div className="card" data-testid="upload">
+    <div data-testid="upload">
       <div
         role="button"
         tabIndex={0}

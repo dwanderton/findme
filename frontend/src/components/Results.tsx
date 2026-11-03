@@ -32,6 +32,7 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
       const r = await apiJson<FindResponse>(`find?userId=${userId}&albumId=${albumId}&threshold=possible`);
       setResp(r);
       setError(null);
+      setExpanded((cur) => cur ?? r.matches[0]?.photoId ?? null);
       onThumbsRef.current?.(r.matches.map((m) => `/api${m.thumbUrl}`));
       if (shouldRepollVlm(r, attempts.current)) {
         attempts.current += 1;
@@ -97,13 +98,22 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 10 }}>
-        {visible.map((m, i) => (
-          <MatchCard key={m.photoId} m={m} index={i} expanded={expanded === m.photoId} onToggle={() => setExpanded(expanded === m.photoId ? null : m.photoId)} />
-        ))}
-      </div>
+      {expanded && resp.matches.find((x) => x.photoId === expanded) && (
+        <ExpandedPanel m={resp.matches.find((x) => x.photoId === expanded)!} />
+      )}
 
-      {expanded && <ExpandedPanel m={resp.matches.find((x) => x.photoId === expanded)!} />}
+      {visible.length > 1 && (
+        <>
+          <div className="mono" style={{ fontSize: "0.7rem", color: "var(--muted)", letterSpacing: "0.08em" }}>
+            ALL MATCHES
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+            {visible.map((m, i) => (
+              <MatchCard key={m.photoId} m={m} index={i} expanded={expanded === m.photoId} onToggle={() => setExpanded(m.photoId)} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
