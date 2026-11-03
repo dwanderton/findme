@@ -88,13 +88,34 @@ export default function Home() {
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px", position: "relative", zIndex: 1 }}>
       <div className="card card-in" style={{ padding: "32px 28px", marginBottom: 16 }}>
-        <h1 style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
-          <span className="logo-dot" aria-hidden /> {COPY.appName}
-        </h1>
-        <p style={{ color: "var(--muted)", margin: "10px 0 24px", fontSize: "1.05rem" }}>{COPY.tagline}</p>
-        <button className="primary" onClick={start} disabled={busy} style={{ fontSize: "1rem", padding: "11px 24px" }}>
-          {busy ? "creating album…" : "Create an album"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
+              <span className="logo-dot" aria-hidden /> {COPY.appName}
+            </h1>
+            <p style={{ color: "var(--muted)", marginTop: 10, fontSize: "1.05rem" }}>{COPY.tagline}</p>
+          </div>
+          <button
+            className="primary"
+            onClick={start}
+            disabled={busy}
+            aria-label="Create an album"
+            title="Create an album"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              fontSize: "1.8rem",
+              lineHeight: 1,
+              padding: 0,
+              flexShrink: 0,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            {busy ? "…" : "+"}
+          </button>
+        </div>
         {error && (
           <p className="mono" style={{ color: "var(--status-error)", marginTop: 16, fontSize: "0.8rem" }}>
             {error}

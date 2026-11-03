@@ -1,6 +1,6 @@
 export const COPY = {
   appName: "findMe",
-  tagline: "Find yourself in a photo album.",
+  tagline: "Find yourself in seconds",
   enrollDrop: "Drop a photo of you. A clear, frontal shot works best.",
   enrollMore: "Add up to 4 more. Different angles and lighting improve recall.",
   enrollCta: "Find me",
