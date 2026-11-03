@@ -194,3 +194,22 @@ button {
   .wx-cloudy::before, .wx-cloudy::after, .wx-fog::before, .wx-fog::after,
   .wx-rain, .wx-snow, .wx-thunder::before { animation: none; }
 }
+
+/* view transitions: quick telemetry-style swaps, no fireworks */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+}
+::view-transition-old(expanded-photo),
+::view-transition-new(expanded-photo) {
+  animation-duration: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

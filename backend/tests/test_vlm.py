@@ -56,8 +56,7 @@ async def test_no_base_url_unavailable(tmp_path):
     v = VlmClient(tmp_path, "a1", base_url="")
     async with httpx.AsyncClient() as c:
         r = await v.caption_photo(c, "p1", jpeg())
-        s = await v.story(c, ["p1"], [])
-    assert r["status"] == "unavailable" and s["status"] == "unavailable"
+    assert r["status"] == "unavailable"
 
 
 @respx.mock
@@ -68,11 +67,3 @@ async def test_garbage_reply_unavailable(vlm):
     assert r["status"] == "unavailable"
 
 
-@respx.mock
-async def test_story_cached_by_result_set(vlm):
-    route = respx.post(CHAT).respond(json=chat_reply("A sunny afternoon at Shoreline."))
-    async with httpx.AsyncClient() as c:
-        s1 = await vlm.story(c, ["p2", "p1"], [{"place": "Shoreline"}])
-        s2 = await vlm.story(c, ["p1", "p2"], [{"place": "Shoreline"}])
-    assert s1["status"] == "ready" and s1["text"] == s2["text"]
-    assert route.call_count == 1

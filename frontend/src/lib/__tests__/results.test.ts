@@ -24,8 +24,13 @@ describe("panel lines", () => {
     expect(cameraLine(base.camera)).toBe("Sony ILCE-7M4 · 35mm · f/1.8 · 1/250 · ISO 400");
   });
 
-  it("camera scrubbed", () => {
-    expect(cameraLine({ present: false, reason: "exif-stripped" })).toContain("scrubbed");
+  it("camera absent renders nothing judgmental", () => {
+    expect(cameraLine({ present: false, reason: "exif-stripped" })).toBe("");
+    expect(cameraLine({ present: false, reason: "no-camera-fields" })).toBe("");
+  });
+
+  it("camera partial shows whatever is available", () => {
+    expect(cameraLine({ present: true, model: "ILCE-7M4", iso: 400 })).toBe("ILCE-7M4 · ISO 400");
   });
 
   it("weather line carries no provenance suffix", () => {
@@ -71,18 +76,16 @@ describe("filters", () => {
 });
 
 describe("vlm repoll", () => {
-  const resp = (pending: number, story: string): FindResponse => ({
+  const resp = (pending: number): FindResponse => ({
     album: { id: "a", photos: 10, faces: 20 },
     matches: [],
-    story: { status: story },
     enrichmentSummary: {},
     vlmSummary: { ready: 1, pending, unavailable: 0 },
   });
 
-  it("repolls while pending, stops at cap and when done", () => {
-    expect(shouldRepollVlm(resp(2, "pending"), 0)).toBe(true);
-    expect(shouldRepollVlm(resp(0, "pending"), 3)).toBe(true);
-    expect(shouldRepollVlm(resp(0, "ready"), 3)).toBe(false);
-    expect(shouldRepollVlm(resp(5, "pending"), 20)).toBe(false);
+  it("repolls while captions pending, stops at cap and when done", () => {
+    expect(shouldRepollVlm(resp(2), 0)).toBe(true);
+    expect(shouldRepollVlm(resp(0), 3)).toBe(false);
+    expect(shouldRepollVlm(resp(5), 20)).toBe(false);
   });
 });

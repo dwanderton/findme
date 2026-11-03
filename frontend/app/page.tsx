@@ -10,7 +10,7 @@ const FEATURES = [
   ["FACE SEARCH", "SCRFD + ArcFace on Runpod serverless GPUs. Upload a selfie, find every photo you are in."],
   ["LOCATION", "EXIF GPS resolved to a place and plotted on a map for each match."],
   ["WEATHER", "The conditions at the moment each photo was taken, from Open-Meteo."],
-  ["CAPTIONS", "Qwen2.5-VL writes a caption, tags, and a short story of your matches."],
+  ["CAPTIONS", "Qwen2.5-VL writes a caption and tags for every match."],
 ];
 
 export default function Home() {

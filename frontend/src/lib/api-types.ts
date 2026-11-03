@@ -152,6 +152,22 @@ export interface paths {
         patch: operations["linkVenue"];
         trace?: never;
     };
+    "/api/albums/{albumId}/photos/{photoId}/timestamp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["setPhotoTimestamp"];
+        trace?: never;
+    };
     "/api/photos/{photoId}": {
         parameters: {
             query?: never;
@@ -358,11 +374,6 @@ export interface components {
                 faces: number;
             };
             matches: components["schemas"]["Match"][];
-            story: {
-                /** @enum {string} */
-                status: "ready" | "pending" | "unavailable";
-                text?: string;
-            };
             enrichmentSummary: {
                 full?: number;
                 partial?: number;
@@ -750,6 +761,44 @@ export interface operations {
                     };
                 };
             };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    setPhotoTimestamp: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Owner-Token": components["parameters"]["OwnerToken"];
+            };
+            path: {
+                albumId: components["parameters"]["AlbumId"];
+                photoId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description ISO 8601 datetime; stored as user-supplied photo metadata */
+                    takenAt: string;
+                };
+            };
+        };
+        responses: {
+            /** @description timestamp stored */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        photoId: components["schemas"]["Uuid"];
+                        takenAt: string;
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };

@@ -54,20 +54,27 @@ def _deg_to_dms(deg: float):
     return ((d, 1), (m, 1), (s.numerator, s.denominator))
 
 
-def _write_venue_exif(data: bytes, venue: dict) -> bytes:
-    gps = {
-        piexif.GPSIFD.GPSLatitudeRef: "N" if venue["lat"] >= 0 else "S",
-        piexif.GPSIFD.GPSLatitude: _deg_to_dms(venue["lat"]),
-        piexif.GPSIFD.GPSLongitudeRef: "E" if venue["lon"] >= 0 else "W",
-        piexif.GPSIFD.GPSLongitude: _deg_to_dms(venue["lon"]),
-    }
-    zeroth = {piexif.ImageIFD.ImageDescription: f"Venue: {venue['label']} (user-supplied)".encode()}
+def _augment_exif(data: bytes, venue: dict | None, taken_at: str | None) -> bytes:
+    ifds: dict = {}
+    if venue:
+        ifds["GPS"] = {
+            piexif.GPSIFD.GPSLatitudeRef: "N" if venue["lat"] >= 0 else "S",
+            piexif.GPSIFD.GPSLatitude: _deg_to_dms(venue["lat"]),
+            piexif.GPSIFD.GPSLongitudeRef: "E" if venue["lon"] >= 0 else "W",
+            piexif.GPSIFD.GPSLongitude: _deg_to_dms(venue["lon"]),
+        }
+        ifds["0th"] = {piexif.ImageIFD.ImageDescription: f"Venue: {venue['label']}".encode()}
+    if taken_at:
+        dt = taken_at[:19].replace("-", ":").replace("T", " ")
+        ifds.setdefault("Exif", {})[piexif.ExifIFD.DateTimeOriginal] = dt.encode()
+    if not ifds:
+        return data
     try:
-        exif_bytes = piexif.dump({"0th": zeroth, "GPS": gps})
+        exif_bytes = piexif.dump(ifds)
         return piexif.insert(exif_bytes, data, new_file=None) or data
     except Exception:
         buf = io.BytesIO()
-        piexif.insert(piexif.dump({"0th": zeroth, "GPS": gps}), data, buf)
+        piexif.insert(piexif.dump(ifds), data, buf)
         return buf.getvalue()
 
 
@@ -99,8 +106,9 @@ def _build_parts(root, album_id: str, user_id: str, photo_ids: list[str]) -> lis
             continue
         data = p.read_bytes()
         exif = meta["photos"][pid].get("exif") or {}
-        if venue and not exif.get("gps_present"):
-            data = _write_venue_exif(data, venue)
+        add_venue = venue if not exif.get("gps_present") else None
+        add_ts = exif.get("taken_at") if exif.get("taken_at_source") == "user" else None
+        data = _augment_exif(data, add_venue, add_ts)
         entries.append((f"photos/{meta['photos'][pid].get('name') or pid}.jpg", data))
 
     parts, current, size = [], [], 0

@@ -10,6 +10,7 @@ class ExifData:
     lat: float | None = None
     lon: float | None = None
     taken_at: str | None = None
+    taken_at_source: str | None = None
     make: str | None = None
     model: str | None = None
     lens: str | None = None

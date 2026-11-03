@@ -3,7 +3,7 @@ info:
   title: findMe API
   version: 1.0.0
   description: 'Find yourself in a photo album. Face matching on Runpod serverless GPUs, matched photos
-    enriched with place (Google Geocoding), weather (Open-Meteo), camera EXIF, and VLM captions/tags/story
+    enriched with place (Google Geocoding), weather (Open-Meteo), camera EXIF, and VLM captions/tags
     (Qwen2.5-VL on Runpod). Browser talks to the Next.js proxy; photo-batch uploads go direct to the flash
     upload endpoint.
 
@@ -361,6 +361,50 @@ paths:
         '204':
           description: unlinked
         '403':
+          $ref: '#/components/responses/Error'
+  /api/albums/{albumId}/photos/{photoId}/timestamp:
+    patch:
+      operationId: setPhotoTimestamp
+      parameters:
+      - $ref: '#/components/parameters/AlbumId'
+      - $ref: '#/components/parameters/OwnerToken'
+      - name: photoId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - takenAt
+              properties:
+                takenAt:
+                  type: string
+                  description: ISO 8601 datetime; stored as user-supplied photo metadata
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - photoId
+                - takenAt
+                properties:
+                  photoId:
+                    $ref: '#/components/schemas/Uuid'
+                  takenAt:
+                    type: string
+          description: timestamp stored
+        '400':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
           $ref: '#/components/responses/Error'
   /api/photos/{photoId}:
     get:
@@ -779,7 +823,6 @@ components:
       - matches
       - enrichmentSummary
       - vlmSummary
-      - story
       properties:
         album:
           type: object
@@ -798,19 +841,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Match'
-        story:
-          type: object
-          required:
-          - status
-          properties:
-            status:
-              type: string
-              enum:
-              - ready
-              - pending
-              - unavailable
-            text:
-              type: string
         enrichmentSummary:
           type: object
           properties:

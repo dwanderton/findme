@@ -48,9 +48,9 @@ def create_app(root: Path | None = None) -> FastAPI:
 
             from findme.jobs.vlm_job import run_vlm_job
 
-            def vlm_runner(root: Path, album_id: str, user_id: str, photo_ids: list, result_set: list) -> None:
+            def vlm_runner(root: Path, album_id: str, user_id: str, photo_ids: list) -> None:
                 def work():
-                    asyncio.run(run_vlm_job(root, album_id, user_id, photo_ids, result_set))
+                    asyncio.run(run_vlm_job(root, album_id, user_id, photo_ids))
 
                 threading.Thread(target=work, daemon=True).start()
 

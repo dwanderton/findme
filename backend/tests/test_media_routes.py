@@ -48,6 +48,8 @@ def test_download_zip_with_sidecar_and_venue_exif(ctx):
     root, client, album_id, user_id, photo_ids = ctx
     meta = load_meta(root, album_id)
     meta["venue"] = {"label": "Shoreline Amphitheatre", "lat": 37.4267, "lon": -122.0806, "source": "user"}
+    first = sorted(meta["photos"])[0]
+    meta["photos"][first].setdefault("exif", {}).update({"taken_at": "2026-06-01T15:30", "taken_at_source": "user"})
     save_meta(root, meta)
     r = client.get(f"/albums/{album_id}/download", params={"userId": user_id})
     assert r.status_code == 200
@@ -59,8 +61,9 @@ def test_download_zip_with_sidecar_and_venue_exif(ctx):
     assert len(photo_names) == 2
     exif = piexif.load(z.read(photo_names[0]))
     assert exif["GPS"], "venue GPS written into zip copy"
-    assert b"user-supplied" in exif["0th"][piexif.ImageIFD.ImageDescription]
-    original = (root / "albums" / album_id / "photos" / f"{sorted(meta['photos'])[0]}.jpg").read_bytes()
+    assert b"Shoreline Amphitheatre" in exif["0th"][piexif.ImageIFD.ImageDescription]
+    assert exif["Exif"][piexif.ExifIFD.DateTimeOriginal] == b"2026:06:01 15:30"
+    original = (root / "albums" / album_id / "photos" / f"{first}.jpg").read_bytes()
     assert not piexif.load(original)["GPS"], "volume original untouched"
 
 

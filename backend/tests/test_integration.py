@@ -109,7 +109,6 @@ def test_find_full_contract_on_real_pipeline(flow, monkeypatch):
         assert enriched[0]["weather"]["tempC"] == 18.4
         assert enriched[0]["camera"]["make"] == "Sony"
 
-    assert body["story"]["status"] == "unavailable"
     assert set(body["enrichmentSummary"]) == {"full", "partial", "scrubbed", "upstreamFailed"}
 
 

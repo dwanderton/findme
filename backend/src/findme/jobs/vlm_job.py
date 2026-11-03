@@ -14,7 +14,6 @@ async def run_vlm_job(
     album_id: str,
     user_id: str,
     photo_ids: list[str],
-    result_set: list[str],
     client: httpx.AsyncClient | None = None,
     vlm: VlmClient | None = None,
 ) -> dict:
@@ -39,18 +38,9 @@ async def run_vlm_job(
                 unavailable += 1
                 trace.emit("vlm", "caption.unavailable", level="warn", photoId=pid)
                 break
-
-        story = {"status": "unavailable"}
-        if unavailable == 0 and result_set:
-            records = []
-            for pid in result_set:
-                rec = vlm.cached(pid)
-                if rec:
-                    records.append({"photoId": pid, "caption": rec.get("caption"), "tags": rec.get("tags")})
-            story = await vlm.story(client, result_set, records)
     finally:
         if own_client:
             await client.aclose()
 
-    trace.emit("vlm", "job.done", ready=ready, unavailable=unavailable, story=story.get("status"))
-    return {"ready": ready, "unavailable": unavailable, "story": story.get("status")}
+    trace.emit("vlm", "job.done", ready=ready, unavailable=unavailable)
+    return {"ready": ready, "unavailable": unavailable}

@@ -103,17 +103,9 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
                 }
             )
 
-    story_text = vlm.cached_story([m["photoId"] for m in out])
-    if story_text:
-        story = {"status": "ready", "text": story_text}
-    elif out and vlm_available:
-        story = {"status": "pending"}
-    else:
-        story = {"status": "unavailable"}
-
     runner = getattr(request.app.state, "run_vlm", None)
     if pending_vlm and runner:
-        runner(root, albumId, userId, pending_vlm, [m["photoId"] for m in out])
+        runner(root, albumId, userId, pending_vlm)
 
     matched_ids = {m["photoId"] for m in out}
     if not hasattr(request.app.state, "find_grants"):
@@ -123,7 +115,6 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
     return {
         "album": {"id": albumId, "photos": len(meta["photos"]), "faces": int(emb.shape[0])},
         "matches": out,
-        "story": story,
         "enrichmentSummary": e_summary,
         "vlmSummary": v_summary,
         "gpsCoverage": gps_coverage(meta),

@@ -33,6 +33,26 @@ def test_venue_link_unlink_owner_gated(ctx):
     assert r.status_code == 204
 
 
+def test_photo_timestamp_owner_gated(ctx):
+    root, client, album_id, token = ctx
+    from findme.albums import load_meta
+
+    photo_id = next(iter(load_meta(root, album_id)["photos"]))
+    url = f"/albums/{album_id}/photos/{photo_id}/timestamp"
+    assert client.patch(url, json={"takenAt": "2026-06-01T15:30"}).status_code == 403
+    assert client.patch(url, json={"takenAt": "yesterday"}, headers={"X-Owner-Token": token}).status_code == 400
+    assert (
+        client.patch(f"/albums/{album_id}/photos/nope/timestamp", json={"takenAt": "2026-06-01T15:30"}, headers={"X-Owner-Token": token}).status_code
+        == 404
+    )
+    r = client.patch(url, json={"takenAt": "2026-06-01T15:30"}, headers={"X-Owner-Token": token})
+    assert r.status_code == 200
+    assert r.json() == {"photoId": photo_id, "takenAt": "2026-06-01T15:30"}
+    exif = load_meta(root, album_id)["photos"][photo_id]["exif"]
+    assert exif["taken_at"] == "2026-06-01T15:30"
+    assert exif["taken_at_source"] == "user"
+
+
 def test_album_delete_erases(ctx):
     root, client, album_id, token = ctx
     r = client.delete(f"/albums/{album_id}", headers={"X-Owner-Token": "wrong"})

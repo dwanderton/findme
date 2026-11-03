@@ -9,9 +9,9 @@ import { DebugConsole } from "@/components/DebugConsole";
 import { Enroll } from "@/components/Enroll";
 import { Progress } from "@/components/Progress";
 import { AlbumActions, Results } from "@/components/Results";
-import { VenueLink } from "@/components/Venue";
 import { Upload } from "@/components/Upload";
 import { COPY } from "@/lib/copy";
+import { viewTransition } from "@/lib/viewTransition";
 
 const cardLabel: React.CSSProperties = {
   fontSize: "0.62rem",
@@ -33,10 +33,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
       .then((s) => {
         if (!s) return;
         if (s.stage !== "received") setCommitted(true);
-        if (s.stage === "ready") {
-          setReady(true);
-          setGps(s.gpsCoverage);
-        }
+        if (s.stage === "ready") setReady(true);
       })
       .catch(() => {});
   }, [albumId]);
@@ -45,7 +42,6 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [venue, setVenue] = useState<{ label: string; lat: number; lon: number; source: string } | null>(null);
-  const [gps, setGps] = useState<{ withGps: number; total: number } | undefined>(undefined);
 
   return (
     <>
@@ -67,19 +63,19 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         {!committed && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>1 · ALBUM</span>
-            <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />
+            <Upload albumId={albumId} onCommitted={() => viewTransition(() => setCommitted(true))} onTiles={setTiles} />
           </section>
         )}
         {committed && !ready && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>INDEXING</span>
-            <Progress albumId={albumId} onReady={(s) => { setReady(true); setGps(s.gpsCoverage); }} />
+            <Progress albumId={albumId} onReady={() => viewTransition(() => setReady(true))} />
           </section>
         )}
         {!ready && !userId && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>2 · YOU</span>
-            <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); setUserId(uid); }} />
+            <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
           </section>
         )}
         {userId && !ready && (
@@ -90,13 +86,12 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         {ready && !userId && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>2 · YOU</span>
-            <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); setUserId(uid); }} />
+            <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
           </section>
         )}
-        {ready && (venue || (gps && gps.withGps / Math.max(gps.total, 1) < 0.2)) && (
-          <VenueLink albumId={albumId} venue={venue} onChange={setVenue} />
+        {userId && ready && (
+          <Results key={venue?.label ?? "none"} albumId={albumId} userId={userId} venue={venue} onVenueChange={setVenue} onThumbs={setServedTiles} />
         )}
-        {userId && ready && <Results key={venue?.label ?? "none"} albumId={albumId} userId={userId} onThumbs={setServedTiles} />}
         <AlbumActions albumId={albumId} userId={userId} ready={ready} />
       </div>
       </main>
