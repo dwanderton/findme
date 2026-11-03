@@ -2,9 +2,6 @@
 **/node_modules
 **/.next
 frontend
-plans/high-level
-plans/completed
-plans/P*.md
-plans/reference/*.py
-plans/reference/assets/s2_*.jpg
+plans
+assets/s2_*.jpg
 .git

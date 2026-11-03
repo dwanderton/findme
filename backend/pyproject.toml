@@ -12,7 +12,6 @@ dependencies = [
     "httpx",
     "fastapi",
     "python-multipart",
-    "runpod-flash",
 ]
 
 [project.optional-dependencies]
