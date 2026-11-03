@@ -1,6 +1,10 @@
 # findMe
 
-**Are you an agent?** Deploy instructions are in [AGENTS.md](AGENTS.md).
+**Using an agent?** Copy-paste the below text to your agent:
+
+```
+Deploy findMe by following every step in https://raw.githubusercontent.com/dwanderton/findme/main/AGENTS.md
+```
 
 Upload an album, enroll a selfie, get back every photo you appear in. Each
 match carries where it was taken (Google Geocoding), the weather at capture
