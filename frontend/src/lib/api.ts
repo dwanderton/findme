@@ -13,6 +13,8 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await r.json().catch(() => null);
   if (!r.ok) {
     const err = body?.error ?? { code: "UNKNOWN", message: `HTTP ${r.status}`, retryable: false };
+    const { reportApiError } = await import("@/components/Banners");
+    reportApiError(r.status, err.code, r.headers.get("retry-after"));
     throw Object.assign(new Error(err.message), { code: err.code, status: r.status, retryable: err.retryable, retryAfter: r.headers.get("retry-after") });
   }
   return body as T;
