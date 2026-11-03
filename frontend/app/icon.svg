@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    circle { animation: pulse 2s ease-in-out infinite; }
+  </style>
   <rect width="64" height="64" rx="14" fill="#0A051B"/>
-  <path d="M32 14 L52 48 L12 48 Z" fill="#5D29F0"/>
-  <circle cx="32" cy="38" r="5" fill="#0A051B"/>
+  <circle cx="32" cy="32" r="16" fill="#5D29F0"/>
 </svg>

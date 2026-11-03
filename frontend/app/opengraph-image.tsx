@@ -23,11 +23,10 @@ export default function OgImage() {
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <div
             style={{
-              width: 0,
-              height: 0,
-              borderLeft: "38px solid transparent",
-              borderRight: "38px solid transparent",
-              borderBottom: "64px solid #5D29F0",
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "#5D29F0",
             }}
           />
           <div style={{ fontSize: 96, fontWeight: 600 }}>findMe</div>

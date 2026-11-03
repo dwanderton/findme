@@ -52,7 +52,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 20 }}>
         <h1 style={{ fontSize: "1.3rem" }}>
           <Link href="/" style={{ color: "inherit", textDecoration: "none" }}>
-            <span style={{ color: "var(--primary)" }}>▲</span> {COPY.appName}
+            <span className="logo-dot" aria-hidden /> {COPY.appName}
           </Link>
         </h1>
         <span className="mono" style={{ color: "var(--muted)", fontSize: "0.7rem" }}>
