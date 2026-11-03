@@ -164,7 +164,7 @@ function WeatherCard({ m }: { m: Match }) {
         border: "1px solid var(--border)",
         background: v.gradient,
         color: v.text,
-        minHeight: 150,
+        minHeight: 230,
         padding: 14,
         display: "flex",
         flexDirection: "column",
@@ -181,7 +181,6 @@ function WeatherCard({ m }: { m: Match }) {
         <div className="mono" style={{ fontSize: "0.72rem", opacity: 0.85, marginTop: 6 }}>
           {w.localTime ? `${w.localTime} local` : ""}
           {w.windKmh ? ` · wind ${w.windKmh} km/h` : ""}
-          {w.basis === "venue-location" ? " · user-supplied venue" : ""}
         </div>
       </div>
     </div>
@@ -189,18 +188,34 @@ function WeatherCard({ m }: { m: Match }) {
 }
 
 function LocationCard({ m }: { m: Match }) {
+  const [mapsDown, setMapsDown] = useState(false);
   const hasMap = m.place.present && typeof m.place.lat === "number" && typeof m.place.lon === "number";
   if (!hasMap) {
     return (
-      <div className="card card-in" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 150 }}>
+      <div className="card card-in" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 230 }}>
         <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{placeLine(m.place)}</p>
       </div>
     );
   }
+  const d = 0.004;
+  const osmSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${m.place.lon! - d},${m.place.lat! - d},${m.place.lon! + d},${m.place.lat! + d}&layer=mapnik&marker=${m.place.lat},${m.place.lon}`;
   const mapSrc = `/api/staticmap?lat=${m.place.lat}&lon=${m.place.lon}&zoom=14`;
   return (
-    <div className="card-in" style={{ position: "relative", overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)", minHeight: 150 }}>
-      <img src={mapSrc} alt={`map of ${m.place.label ?? "location"}`} style={{ width: "100%", height: "100%", minHeight: 150, objectFit: "cover", display: "block" }} />
+    <div className="card-in" style={{ position: "relative", overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)", minHeight: 230 }}>
+      {mapsDown ? (
+        <iframe
+          src={osmSrc}
+          title={`map of ${m.place.label ?? "location"}`}
+          style={{ width: "100%", height: "100%", minHeight: 230, border: 0, display: "block" }}
+        />
+      ) : (
+        <img
+          src={mapSrc}
+          alt={`map of ${m.place.label ?? "location"}`}
+          onError={() => setMapsDown(true)}
+          style={{ width: "100%", height: "100%", minHeight: 230, objectFit: "cover", display: "block" }}
+        />
+      )}
       <div
         style={{
           position: "absolute",
@@ -209,12 +224,10 @@ function LocationCard({ m }: { m: Match }) {
           bottom: 0,
           padding: "20px 12px 10px",
           background: "linear-gradient(180deg, transparent, oklch(0.13 0.05 291 / 0.85))",
+          pointerEvents: "none",
         }}
       >
-        <p className="mono" style={{ fontSize: "0.76rem", color: "var(--text)" }}>
-          {m.place.label}
-          {m.place.source === "user-venue" ? " · user-supplied venue" : ""}
-        </p>
+        <p className="mono" style={{ fontSize: "0.76rem", color: "var(--text)" }}>{m.place.label}</p>
       </div>
     </div>
   );
@@ -243,8 +256,7 @@ function ExpandedPanel({ m }: { m: Match }) {
 
       <LocationCard m={m} />
 
-      <div className="card card-in">
-        <span className="mono" style={cardLabel}>CAMERA</span>
+      <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <p className="mono" style={{ fontSize: "0.8rem" }}>{cameraLine(m.camera)}</p>
         <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8 }}>
           {m.takenAt ? `taken ${m.takenAt.slice(0, 10)} · ` : ""}match {m.band} · score {m.score.toFixed(2)}
