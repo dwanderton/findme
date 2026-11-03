@@ -49,7 +49,11 @@ export function DebugConsole({ albumId }: { albumId: string }) {
     if (!open) return;
     void refresh();
     const t = setInterval(refresh, 2000);
-    return () => clearInterval(t);
+    document.body.style.paddingBottom = "44vh";
+    return () => {
+      clearInterval(t);
+      document.body.style.paddingBottom = "";
+    };
   }, [open, refresh]);
 
   if (!open) return null;

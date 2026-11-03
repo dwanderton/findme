@@ -35,7 +35,7 @@ export function installFetchInterceptor() {
   const orig = window.fetch.bind(window);
   window.fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    if (!url.startsWith("/api")) return orig(input, init);
+    if (!url.startsWith("/api") || url.startsWith("/api/debug")) return orig(input, init);
     const started = performance.now();
     try {
       const resp = await orig(input, init);
