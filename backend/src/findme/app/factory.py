@@ -28,6 +28,7 @@ def create_app(root: Path | None = None) -> FastAPI:
         return JSONResponse(status_code=exc.status, content=exc.envelope())
 
     @app.get("/health")
+    @app.get("/ping")
     async def health():
         return {"status": "ok"}
 

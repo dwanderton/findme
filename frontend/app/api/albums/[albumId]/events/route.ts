@@ -20,7 +20,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ albumId: string
       while (alive && Date.now() - started < MAX_LIFETIME_MS) {
         let cur: ProgressSnapshot | null = null;
         try {
-          const r = await fetch(`${BACKEND_URL()}/albums/${albumId}/status`, { cache: "no-store" });
+          const headers: Record<string, string> = {};
+          const key = process.env.RUNPOD_API_KEY;
+          if (key) headers.authorization = `Bearer ${key}`;
+          const r = await fetch(`${BACKEND_URL()}/albums/${albumId}/status`, { cache: "no-store", headers });
           if (r.status === 404) {
             controller.enqueue(encoder.encode(`event: failed\ndata: {"stage":"failed"}\n\n`));
             break;

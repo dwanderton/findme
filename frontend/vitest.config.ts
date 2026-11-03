@@ -3,5 +3,5 @@ import path from "node:path";
 
 export default defineConfig({
   resolve: { alias: { "@": path.resolve(__dirname, "src") } },
-  test: { environment: "happy-dom" },
+  test: { environment: "happy-dom", exclude: ["e2e/**", "node_modules/**"] },
 });
