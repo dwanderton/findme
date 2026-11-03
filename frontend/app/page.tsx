@@ -102,18 +102,22 @@ export default function Home() {
             aria-label="Create an album"
             title="Create an album"
             style={{
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               borderRadius: "50%",
-              fontSize: "1.8rem",
-              lineHeight: 1,
               padding: 0,
               flexShrink: 0,
               display: "grid",
               placeItems: "center",
             }}
           >
-            {busy ? "…" : "+"}
+            {busy ? (
+              <span className="dot running" style={{ background: "#fff" }} />
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            )}
           </button>
         </div>
         {error && (
