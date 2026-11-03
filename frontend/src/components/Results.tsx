@@ -177,7 +177,7 @@ export function AlbumActions({ albumId, userId, ready }: { albumId: string; user
         {copied ? "link copied" : "copy share link"}
       </button>
       {userId && ready && (
-        <a className="ghost" style={{ textDecoration: "none", padding: "7px 14px" }} href={`/api/albums/${albumId}/download?userId=${userId}`}>
+        <a className="ghost" href={`/api/albums/${albumId}/download?userId=${userId}`}>
           download matches
         </a>
       )}
