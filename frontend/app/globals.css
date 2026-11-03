@@ -94,6 +94,14 @@ button {
 .chip.active { border-color: var(--primary); color: var(--primary-text); background: var(--primary-soft); }
 
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.logo-dot {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--primary);
+  animation: pulse-running 2s ease-in-out infinite;
+}
 .dot.running { background: var(--status-running); animation: pulse-running 2s ease-in-out infinite; }
 .dot.pending { background: var(--status-pending); }
 .dot.error { background: var(--status-error); }

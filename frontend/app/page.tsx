@@ -35,7 +35,7 @@ export default function Home() {
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "80px 24px", position: "relative", zIndex: 1 }}>
       <div className="card card-in" style={{ padding: "32px 28px", marginBottom: 16 }}>
         <h1 style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
-          <span style={{ color: "var(--primary)" }}>▲</span> {COPY.appName}
+          <span className="logo-dot" aria-hidden /> {COPY.appName}
         </h1>
         <p style={{ color: "var(--muted)", margin: "10px 0 24px", fontSize: "1.05rem" }}>{COPY.tagline}</p>
         <button className="primary" onClick={start} disabled={busy} style={{ fontSize: "1rem", padding: "11px 24px" }}>
