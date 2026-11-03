@@ -4,8 +4,10 @@ export const BACKEND_URL = () => process.env.BACKEND_URL ?? "http://localhost:80
 
 const FORWARD_HEADERS = ["content-type", "x-owner-token"];
 
-export function limitKind(path: string): "enroll" | "default" {
-  return path.startsWith("enroll") ? "enroll" : "default";
+export function limitKind(path: string): "enroll" | "places" | "default" {
+  if (path.startsWith("enroll")) return "enroll";
+  if (path.startsWith("places")) return "places";
+  return "default";
 }
 
 export function rateLimitResponse(retryAfterS: number): Response {

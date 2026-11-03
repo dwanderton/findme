@@ -29,7 +29,7 @@ def create_app(root: Path | None = None) -> FastAPI:
     async def health():
         return {"status": "ok"}
 
-    from findme.routes import album, delete, enroll, find, media, status, upload
+    from findme.routes import album, delete, enroll, find, media, places, status, upload
 
     app.include_router(album.router)
     app.include_router(upload.router)
@@ -37,5 +37,6 @@ def create_app(root: Path | None = None) -> FastAPI:
     app.include_router(status.router)
     app.include_router(find.router)
     app.include_router(media.router)
+    app.include_router(places.router)
     app.include_router(delete.router)
     return app

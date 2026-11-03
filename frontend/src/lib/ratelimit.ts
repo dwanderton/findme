@@ -5,6 +5,7 @@ const buckets = new Map<string, Bucket>();
 export const LIMITS: Record<string, { perMin: number }> = {
   default: { perMin: 30 },
   enroll: { perMin: 5 },
+  places: { perMin: 10 },
 };
 
 export function take(ip: string, kind: keyof typeof LIMITS = "default", now = Date.now()): { ok: boolean; retryAfterS: number; remaining: number } {
