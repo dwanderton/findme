@@ -9,64 +9,84 @@ export function pickTiles(uploadUrls: string[], servedUrls: string[]): string[] 
   return Array.from({ length: MAX_TILES }, (_, i) => source[Math.floor(i * step)]);
 }
 
-export function Backdrop({ uploadUrls, servedUrls }: { uploadUrls: string[]; servedUrls: string[] }) {
+export function columnize(tiles: string[], columns = 4): string[][] {
+  return Array.from({ length: columns }, (_, c) => tiles.filter((_, i) => i % columns === c));
+}
+
+export function Backdrop({
+  uploadUrls,
+  servedUrls,
+  dimmed = false,
+}: {
+  uploadUrls: string[];
+  servedUrls: string[];
+  dimmed?: boolean;
+}) {
   const tiles = pickTiles(uploadUrls, servedUrls);
   if (!tiles.length) return null;
+  const cols = columnize(tiles).filter((c) => c.length > 0);
+
   return (
-    <div
-      aria-hidden
-      data-testid="backdrop"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: -1,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        className="backdrop-drift"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: 4,
-          minHeight: "120vh",
-          opacity: 0.38,
-          filter: "saturate(0.85)",
-        }}
-      >
-        {tiles.map((url, i) => (
-          <img
-            key={url}
-            src={url}
-            alt=""
-            loading="lazy"
-            className="log-stream"
-            style={{
-              width: "100%",
-              aspectRatio: "1",
-              objectFit: "cover",
-              animationDelay: `${(i % 12) * 40}ms`,
-            }}
-          />
+    <>
+      <div aria-hidden data-testid="backdrop" className={`marquee ${dimmed ? "dimmed" : ""}`}>
+        {cols.map((col, ci) => (
+          <div className="mq-col" key={ci}>
+            {[...col, ...col, ...col, ...col].map((src, i) => (
+              <img key={`${src}-${i}`} src={src} alt="" loading={i < 3 ? "eager" : "lazy"} decoding="async" />
+            ))}
+          </div>
         ))}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(180deg, oklch(0.13 0.05 291 / 0.5), oklch(0.13 0.05 291 / 0.82))",
-        }}
-      />
+      <div className="mq-veil" aria-hidden />
       <style>{`
-        .backdrop-drift { animation: backdrop-drift 60s linear infinite alternate; }
-        @keyframes backdrop-drift {
-          from { transform: translateY(0); }
-          to { transform: translateY(-12vh); }
+        .marquee {
+          position: fixed;
+          inset: -12vh -6vw;
+          z-index: -1;
+          display: flex;
+          gap: 1.2vw;
+          transform: rotate(-3.5deg) scale(1.08);
+          opacity: 0.62;
+          transition: opacity 1.2s ease;
+          overflow: hidden;
+        }
+        .marquee.dimmed { opacity: 0.2; }
+        .mq-col {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2vw;
+          animation: mq-up 90s linear infinite;
+          will-change: transform;
+          transform: translate3d(0, 0, 0);
+        }
+        .mq-col:nth-child(2) { animation-duration: 120s; animation-direction: reverse; }
+        .mq-col:nth-child(3) { animation-duration: 100s; }
+        .mq-col:nth-child(4) { animation-duration: 140s; animation-direction: reverse; }
+        @keyframes mq-up {
+          from { transform: translate3d(0, 0, 0); }
+          to { transform: translate3d(0, -50%, 0); }
+        }
+        .mq-col img {
+          width: 100%;
+          aspect-ratio: 3 / 2;
+          object-fit: cover;
+          border-radius: 4px;
+          filter: grayscale(0.3) contrast(0.95) brightness(0.72);
+        }
+        .mq-veil {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(ellipse 80% 60% at 50% 38%, oklch(0.13 0.05 291 / 0.42) 0%, oklch(0.13 0.05 291 / 0.82) 75%),
+            linear-gradient(180deg, oklch(0.13 0.05 291 / 0.55), oklch(0.13 0.05 291 / 0.22) 30%, oklch(0.13 0.05 291 / 0.8) 100%);
         }
         @media (prefers-reduced-motion: reduce) {
-          .backdrop-drift { animation: none; }
+          .mq-col { animation: none; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
