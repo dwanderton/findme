@@ -67,7 +67,7 @@ def test_find_contract_and_bands(ctx):
         assert m["band"] in ("strong", "possible")
         assert set(m) >= {"photoId", "score", "bbox", "camera", "place", "weather", "vlm", "enrichment"}
     assert body["vlmSummary"]["unavailable"] == 2
-    assert body["story"]["status"] == "unavailable"
+    assert "story" not in body
 
 
 def test_enrichment_states_surface(ctx):
@@ -102,5 +102,4 @@ def test_vlm_pending_kicks_runner(ctx):
     r = client.get("/find", params={"userId": user_id, "albumId": album_id, "threshold": "possible"})
     body = r.json()
     assert body["vlmSummary"]["pending"] == 2
-    assert body["story"]["status"] == "pending"
     assert len(calls) == 1

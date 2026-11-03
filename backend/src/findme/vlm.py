@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -29,12 +28,6 @@ CAPTION_PROMPT = (
     f"{TAXONOMY}, " '"altText": one accessibility sentence}. No other keys.'
 )
 
-STORY_PROMPT = (
-    "Write 2-3 sentences summarizing where and when these matched photos were "
-    "taken, grounded ONLY in the provided records. Plain text, no speculation, "
-    "no em dashes."
-)
-
 TIMEOUT_S = 120.0
 
 
@@ -42,8 +35,6 @@ class VlmClient:
     def __init__(self, root: Path, album_id: str, base_url: str | None = None, model: str | None = None):
         self.dir = root / "vlm"
         self.dir.mkdir(parents=True, exist_ok=True)
-        self.story_dir = root / "vlm" / "stories"
-        self.story_dir.mkdir(parents=True, exist_ok=True)
         self.base_url = base_url or os.environ.get("VLM_BASE_URL", "")
         self.model = model or os.environ.get("VLM_MODEL", "Qwen/Qwen2.5-VL-7B-Instruct-AWQ")
 
@@ -118,31 +109,3 @@ class VlmClient:
             return {"status": "unavailable"}
         self._store(photo_id, record)
         return record
-
-    def story_key(self, photo_ids: list[str]) -> str:
-        return hashlib.sha256(",".join(sorted(photo_ids)).encode()).hexdigest()[:16]
-
-    def cached_story(self, photo_ids: list[str]) -> str | None:
-        p = self.story_dir / f"{self.story_key(photo_ids)}.txt"
-        return p.read_text() if p.exists() else None
-
-    async def story(self, client: httpx.AsyncClient, photo_ids: list[str], records: list[dict]) -> dict:
-        hit = self.cached_story(photo_ids)
-        if hit:
-            return {"status": "ready", "text": hit}
-        if not self.base_url:
-            return {"status": "unavailable"}
-        messages = [
-            {"role": "user", "content": f"{STORY_PROMPT}\n\nRecords: {json.dumps(records)[:6000]}"}
-        ]
-        try:
-            text = (await self._chat(client, messages, max_tokens=200)).strip()
-        except (httpx.HTTPError, KeyError, IndexError):
-            return {"status": "unavailable"}
-        if not text:
-            return {"status": "unavailable"}
-        p = self.story_dir / f"{self.story_key(photo_ids)}.txt"
-        tmp = p.with_suffix(".tmp")
-        tmp.write_text(text)
-        tmp.replace(p)
-        return {"status": "ready", "text": text}

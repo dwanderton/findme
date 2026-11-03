@@ -18,14 +18,13 @@ export type Match = {
 export type FindResponse = {
   album: { id: string; photos: number; faces: number };
   matches: Match[];
-  story: { status: string; text?: string };
   enrichmentSummary: Record<string, number>;
   vlmSummary: { ready: number; pending: number; unavailable: number };
   gpsCoverage?: { withGps: number; total: number };
 };
 
 export function cameraLine(c: Match["camera"]): string {
-  if (!c.present) return c.reason === "exif-stripped" ? COPY.scrubbed : "no camera data";
+  if (!c.present) return "";
   const parts = [
     [c.make, c.model].filter(Boolean).join(" "),
     c.focalLengthMm ? `${c.focalLengthMm}mm` : null,
@@ -89,5 +88,5 @@ export function filterMatches(matches: Match[], band: "strong" | "all", tags: st
 }
 
 export function shouldRepollVlm(resp: FindResponse, attempts: number, maxAttempts = 20): boolean {
-  return attempts < maxAttempts && (resp.vlmSummary.pending > 0 || resp.story.status === "pending");
+  return attempts < maxAttempts && resp.vlmSummary.pending > 0;
 }

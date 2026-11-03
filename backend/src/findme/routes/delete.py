@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Header, Request, Response
 
-from findme.albums import delete_album, delete_user, load_meta, require_owner, set_venue
+from datetime import datetime
+
+from findme.albums import delete_album, delete_user, load_meta, require_owner, set_photo_timestamp, set_venue
 from findme.errors import ApiError
 
 router = APIRouter()
@@ -40,6 +42,20 @@ async def link_venue(album_id: str, request: Request, x_owner_token: str | None 
     venue["source"] = "user"
     meta = set_venue(request.app.state.root, album_id, x_owner_token, venue)
     return {"venue": meta["venue"]}
+
+
+@router.patch("/albums/{album_id}/photos/{photo_id}/timestamp")
+async def set_timestamp(
+    album_id: str, photo_id: str, request: Request, x_owner_token: str | None = Header(default=None)
+):
+    body = await request.json()
+    taken_at = str(body.get("takenAt", "")).strip()
+    try:
+        datetime.fromisoformat(taken_at)
+    except ValueError:
+        raise ApiError("UNSUPPORTED_MEDIA", "takenAt must be an ISO 8601 datetime.")
+    info = set_photo_timestamp(request.app.state.root, album_id, x_owner_token, photo_id, taken_at)
+    return {"photoId": photo_id, "takenAt": info["exif"]["taken_at"]}
 
 
 @router.delete("/albums/{album_id}/venue", status_code=204)

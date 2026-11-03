@@ -32,19 +32,17 @@ def caption_reply():
 
 
 @respx.mock
-async def test_job_captions_and_story(ctx):
+async def test_job_captions(ctx):
     root, album_id, photo_ids = ctx
     route = respx.post(CHAT)
     route.side_effect = [
         httpx.Response(200, json=caption_reply()),
         httpx.Response(200, json=caption_reply()),
-        httpx.Response(200, json={"choices": [{"message": {"content": "Two photos from the event."}}]}),
     ]
     vlm = VlmClient(root, album_id, base_url=BASE)
-    r = await run_vlm_job(root, album_id, "user-1", photo_ids, photo_ids, vlm=vlm)
-    assert r == {"ready": 2, "unavailable": 0, "story": "ready"}
+    r = await run_vlm_job(root, album_id, "user-1", photo_ids, vlm=vlm)
+    assert r == {"ready": 2, "unavailable": 0}
     assert vlm.cached(photo_ids[0])["caption"] == "You at the event."
-    assert vlm.cached_story(photo_ids) == "Two photos from the event."
 
 
 @respx.mock
@@ -52,8 +50,8 @@ async def test_endpoint_down_no_retry_storm(ctx):
     root, album_id, photo_ids = ctx
     route = respx.post(CHAT).respond(status_code=503)
     vlm = VlmClient(root, album_id, base_url=BASE)
-    r = await run_vlm_job(root, album_id, "user-1", photo_ids, photo_ids, vlm=vlm)
-    assert r["ready"] == 0 and r["story"] == "unavailable"
+    r = await run_vlm_job(root, album_id, "user-1", photo_ids, vlm=vlm)
+    assert r["ready"] == 0
     assert route.call_count == 1
 
 
@@ -64,11 +62,10 @@ async def test_cached_photos_skip_calls(ctx):
     route.side_effect = [
         httpx.Response(200, json=caption_reply()),
         httpx.Response(200, json=caption_reply()),
-        httpx.Response(200, json={"choices": [{"message": {"content": "Story."}}]}),
     ]
     vlm = VlmClient(root, album_id, base_url=BASE)
-    await run_vlm_job(root, album_id, "user-1", photo_ids, photo_ids, vlm=vlm)
+    await run_vlm_job(root, album_id, "user-1", photo_ids, vlm=vlm)
     calls = route.call_count
-    r2 = await run_vlm_job(root, album_id, "user-2", photo_ids, photo_ids, vlm=vlm)
+    r2 = await run_vlm_job(root, album_id, "user-2", photo_ids, vlm=vlm)
     assert r2["ready"] == 2
     assert route.call_count == calls

@@ -64,6 +64,19 @@ def set_venue(root: Path, album_id: str, token: str | None, venue: dict | None) 
     return meta
 
 
+def set_photo_timestamp(root: Path, album_id: str, token: str | None, photo_id: str, taken_at: str) -> dict:
+    meta = load_meta(root, album_id)
+    require_owner(meta, token)
+    info = meta.get("photos", {}).get(photo_id)
+    if info is None:
+        raise ApiError("UNKNOWN_PHOTO", "Photo not found.")
+    exif = info.setdefault("exif", {})
+    exif["taken_at"] = taken_at
+    exif["taken_at_source"] = "user"
+    save_meta(root, meta)
+    return info
+
+
 def gps_coverage(meta: dict) -> dict:
     photos = meta.get("photos", {})
     with_gps = sum(1 for p in photos.values() if p.get("exif", {}).get("gps_present"))

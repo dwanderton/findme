@@ -16,9 +16,25 @@ import {
   type FindResponse,
   type Match,
 } from "@/lib/results";
+import { viewTransition } from "@/lib/viewTransition";
 import { weatherVisual } from "@/lib/weatherVisual";
+import { VenueLink } from "@/components/Venue";
 
-export function Results({ albumId, userId, onThumbs }: { albumId: string; userId: string; onThumbs?: (urls: string[]) => void }) {
+type Venue = { label: string; lat: number; lon: number; source: string };
+
+export function Results({
+  albumId,
+  userId,
+  venue,
+  onVenueChange,
+  onThumbs,
+}: {
+  albumId: string;
+  userId: string;
+  venue: Venue | null;
+  onVenueChange: (v: Venue | null) => void;
+  onThumbs?: (urls: string[]) => void;
+}) {
   const onThumbsRef = useRef(onThumbs);
   onThumbsRef.current = onThumbs;
   const [resp, setResp] = useState<FindResponse | null>(null);
@@ -67,24 +83,14 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
         {resp.matches.length - strongCount} possible
       </div>
 
-      {resp.story.status === "ready" && resp.story.text && (
-        <div className="card card-in">
-          <div className="mono" style={{ fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--primary-text)" }}>{COPY.storyLabel}</div>
-          <p style={{ marginTop: 6, fontSize: "0.92rem" }}>{resp.story.text}</p>
-        </div>
-      )}
-      {resp.story.status === "pending" && (
-        <div className="mono log-stream" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>story generating…</div>
-      )}
-
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <button className={`chip ${band === "all" ? "active" : ""}`} onClick={() => setBand("all")}>all bands</button>
-        <button className={`chip ${band === "strong" ? "active" : ""}`} onClick={() => setBand("strong")}>strong only</button>
+        <button className={`chip ${band === "all" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("all"))}>all bands</button>
+        <button className={`chip ${band === "strong" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("strong"))}>strong only</button>
         {tagCounts(resp.matches).map(([t, n]) => (
           <button
             key={t}
             className={`chip ${tags.includes(t) ? "active" : ""}`}
-            onClick={() => setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))}
+            onClick={() => viewTransition(() => setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t])))}
           >
             {t} · {n}
           </button>
@@ -99,9 +105,16 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
         </div>
       )}
 
-      {expanded && resp.matches.find((x) => x.photoId === expanded) && (
-        <ExpandedPanel m={resp.matches.find((x) => x.photoId === expanded)!} />
-      )}
+      {(() => {
+        const current = expanded ? resp.matches.find((x) => x.photoId === expanded) : undefined;
+        const noGps = current ? !current.place.present && current.place.reason === "no-gps" : false;
+        return (
+          <>
+            {(venue || noGps) && <VenueLink albumId={albumId} venue={venue} onChange={onVenueChange} />}
+            {current && <ExpandedPanel m={current} albumId={albumId} onRefresh={() => void load()} />}
+          </>
+        );
+      })()}
 
       {visible.length > 1 && (
         <>
@@ -110,7 +123,7 @@ export function Results({ albumId, userId, onThumbs }: { albumId: string; userId
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
             {visible.map((m, i) => (
-              <MatchCard key={m.photoId} m={m} index={i} expanded={expanded === m.photoId} onToggle={() => setExpanded(m.photoId)} />
+              <MatchCard key={m.photoId} m={m} index={i} expanded={expanded === m.photoId} onToggle={() => viewTransition(() => setExpanded(m.photoId))} />
             ))}
           </div>
         </>
@@ -143,13 +156,57 @@ const cardLabel: React.CSSProperties = {
   marginBottom: 8,
 };
 
-function WeatherCard({ m }: { m: Match }) {
+function TimestampForm({ albumId, photoId, onSaved }: { albumId: string; photoId: string; onSaved: () => void }) {
+  const [owner, setOwner] = useState<string | null>(null);
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setOwner(localStorage.getItem(`owner:${albumId}`));
+  }, [albumId]);
+
+  if (!owner) return null;
+
+  async function save() {
+    if (!value || busy) return;
+    setBusy(true);
+    setFailed(false);
+    const r = await fetch(`/api/albums/${albumId}/photos/${photoId}/timestamp`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", "x-owner-token": owner! },
+      body: JSON.stringify({ takenAt: value }),
+    }).catch(() => null);
+    setBusy(false);
+    if (r?.ok) onSaved();
+    else setFailed(true);
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+      <input
+        type="datetime-local"
+        className="mono"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)", padding: "6px 8px", fontSize: "0.75rem" }}
+        aria-label="when was this photo taken"
+      />
+      <button className="ghost" disabled={!value || busy} onClick={() => void save()}>
+        {busy ? "saving…" : "add timestamp"}
+      </button>
+      {failed && <span className="mono" style={{ color: "var(--status-error)", fontSize: "0.7rem" }}>save failed. retry</span>}
+    </div>
+  );
+}
+
+function WeatherCard({ m, albumId, onRefresh }: { m: Match; albumId: string; onRefresh: () => void }) {
   const w = m.weather;
   if (!w.present) {
     return (
-      <div className="card card-in">
-        <span className="mono" style={cardLabel}>WEATHER</span>
+      <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{weatherLine(w)}</p>
+        {w.reason === "no-timestamp" && <TimestampForm albumId={albumId} photoId={m.photoId} onSaved={onRefresh} />}
       </div>
     );
   }
@@ -233,7 +290,8 @@ function LocationCard({ m }: { m: Match }) {
   );
 }
 
-function ExpandedPanel({ m }: { m: Match }) {
+function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; onRefresh: () => void }) {
+  const camera = cameraLine(m.camera);
   return (
     <div
       data-testid="panel"
@@ -241,7 +299,11 @@ function ExpandedPanel({ m }: { m: Match }) {
     >
       <div className="card card-in" style={{ gridColumn: "1 / -1" }}>
         <span className="mono" style={cardLabel}>PHOTO</span>
-        <img src={`/api${m.fullUrl}`} alt={altText(m)} style={{ width: "100%", maxHeight: 420, objectFit: "contain", borderRadius: 6 }} />
+        <img
+          src={`/api${m.fullUrl}`}
+          alt={altText(m)}
+          style={{ width: "100%", maxHeight: 420, objectFit: "contain", borderRadius: 6, viewTransitionName: "expanded-photo" }}
+        />
         <p className="mono" style={{ fontSize: "0.78rem", marginTop: 8 }}>{photoLine(m.vlm)}</p>
         {(m.vlm.tags?.length ?? 0) > 0 && (
           <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -252,13 +314,13 @@ function ExpandedPanel({ m }: { m: Match }) {
         )}
       </div>
 
-      <WeatherCard m={m} />
+      <WeatherCard m={m} albumId={albumId} onRefresh={onRefresh} />
 
       <LocationCard m={m} />
 
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <p className="mono" style={{ fontSize: "0.8rem" }}>{cameraLine(m.camera)}</p>
-        <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8 }}>
+        {camera && <p className="mono" style={{ fontSize: "0.8rem" }}>{camera}</p>}
+        <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: camera ? 8 : 0 }}>
           {m.takenAt ? `taken ${m.takenAt.slice(0, 10)} · ` : ""}match {m.band} · score {m.score.toFixed(2)}
         </p>
       </div>
