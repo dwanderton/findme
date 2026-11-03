@@ -30,7 +30,7 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   const panel = page.getByTestId("panel");
   await expect(panel).toBeVisible();
   await expect(panel.getByText("PHOTO")).toBeVisible();
-  await expect(panel.getByText("CAMERA")).toBeVisible();
+  await expect(panel.getByText(/match (strong|possible) · score/)).toBeVisible();
 
   await page.keyboard.press("`");
   await expect(page.getByTestId("debug-console")).toBeVisible();

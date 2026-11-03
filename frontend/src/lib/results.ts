@@ -49,8 +49,7 @@ export function weatherLine(w: Match["weather"]): string {
     w.localTime ? `${w.localTime} local` : null,
     w.windKmh ? `wind ${w.windKmh} km/h` : null,
   ].filter(Boolean);
-  const suffix = w.basis === "venue-location" ? ` · ${COPY.venueSuffix}` : "";
-  return parts.join(" · ") + suffix;
+  return parts.join(" · ");
 }
 
 export function placeLine(p: Match["place"]): string {
@@ -59,8 +58,7 @@ export function placeLine(p: Match["place"]): string {
     if (p.reason === "deferred") return "deferred. refresh to enrich";
     return "place lookup failed. retry";
   }
-  const suffix = p.source === "user-venue" ? ` · ${COPY.venueSuffix}` : "";
-  return (p.label ?? "") + suffix;
+  return p.label ?? "";
 }
 
 export function photoLine(v: Match["vlm"]): string {

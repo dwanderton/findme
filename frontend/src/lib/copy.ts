@@ -27,7 +27,6 @@ export const COPY = {
   storyLabel: "STORY · generated on Runpod",
   venuePrompt: "Link a venue to enable place and weather enrichment.",
   venueUnavailable: "venue search unavailable. retry",
-  venueSuffix: "user-supplied venue",
   shareDisclosure: "anyone with this link can search this album for themselves",
   deleteConfirm: "Delete everything? Photos, face vectors and caches are erased.",
   downloadNote: "zip contains processed photos plus findme.json with full provenance",

@@ -28,10 +28,10 @@ describe("panel lines", () => {
     expect(cameraLine({ present: false, reason: "exif-stripped" })).toContain("scrubbed");
   });
 
-  it("weather line with venue provenance suffix", () => {
+  it("weather line carries no provenance suffix", () => {
     const line = weatherLine({ ...base.weather, basis: "venue-location" });
     expect(line).toContain("18.4°C · clear sky · 14:20 local");
-    expect(line).toContain("user-supplied venue");
+    expect(line).not.toContain("venue");
   });
 
   it("absent reasons mapped to honest copy", () => {
@@ -40,9 +40,9 @@ describe("panel lines", () => {
     expect(placeLine({ present: false, reason: "no-gps" })).toBe("no GPS in file");
   });
 
-  it("vlm pending and user-venue place", () => {
+  it("vlm pending and user-venue place shows bare label", () => {
     expect(photoLine({ status: "pending" })).toContain("generating");
-    expect(placeLine({ present: true, source: "user-venue", label: "Shoreline" })).toContain("user-supplied venue");
+    expect(placeLine({ present: true, source: "user-venue", label: "Shoreline" })).toBe("Shoreline");
   });
 });
 
