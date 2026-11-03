@@ -57,61 +57,86 @@ export type ProgressHandlers = {
   onFailed: (s: ProgressSnapshot) => void;
 };
 
+/* The stream exists only while results are awaited and the tab is visible.
+ * A terminal snapshot (ready/failed) closes every transport for good, and a
+ * hidden tab closes them until the tab is visible again — an open stream
+ * makes the proxy poll the backend continuously, which keeps a GPU worker
+ * billing. */
 export function watchProgress(albumId: string, handlers: ProgressHandlers): () => void {
   let stopped = false;
+  let terminal = false;
   let failures = 0;
   let es: EventSource | null = null;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
+  const closeTransports = () => {
+    es?.close();
+    es = null;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  };
+
   const route = (s: ProgressSnapshot) => {
+    if (s.stage === "ready" || s.stage === "failed") {
+      terminal = true;
+      closeTransports();
+    }
     if (s.stage === "ready") handlers.onDone(s);
     else if (s.stage === "failed") handlers.onFailed(s);
     else handlers.onSnapshot(s);
   };
 
   const startPolling = () => {
-    if (pollTimer || stopped) return;
+    if (pollTimer || stopped || terminal) return;
     pollTimer = setInterval(async () => {
       try {
         const r = await fetch(`/api/albums/${albumId}/status`, { cache: "no-store" });
-        if (r.ok) {
-          const s = (await r.json()) as ProgressSnapshot;
-          route(s);
-          if ((s.stage === "ready" || s.stage === "failed") && pollTimer) clearInterval(pollTimer);
-        }
+        if (r.ok) route((await r.json()) as ProgressSnapshot);
       } catch {}
     }, 2000);
   };
 
   const startSse = () => {
-    if (stopped) return;
+    if (es || stopped || terminal) return;
     es = new EventSource(`/api/albums/${albumId}/events`);
     const parse = (e: MessageEvent) => route(JSON.parse(e.data) as ProgressSnapshot);
     es.addEventListener("progress", parse);
     es.addEventListener("stage", parse);
-    es.addEventListener("done", (e) => {
-      parse(e as MessageEvent);
-      es?.close();
-    });
-    es.addEventListener("failed", (e) => {
-      parse(e as MessageEvent);
-      es?.close();
-    });
+    es.addEventListener("done", parse);
+    es.addEventListener("failed", parse);
     es.onerror = () => {
       failures += 1;
       if (shouldDowngrade(failures)) {
-        es?.close();
+        closeTransports();
         startPolling();
       }
     };
   };
 
-  if (typeof EventSource !== "undefined") startSse();
-  else startPolling();
+  const start = () => {
+    if (stopped || terminal) return;
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (typeof EventSource !== "undefined" && !shouldDowngrade(failures)) startSse();
+    else startPolling();
+  };
+
+  const onVisibility = () => {
+    if (document.hidden) closeTransports();
+    else start();
+  };
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", onVisibility);
+  }
+
+  start();
 
   return () => {
     stopped = true;
-    es?.close();
-    if (pollTimer) clearInterval(pollTimer);
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", onVisibility);
+    }
+    closeTransports();
   };
 }
