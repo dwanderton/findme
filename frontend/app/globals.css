@@ -1,0 +1,111 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: oklch(0.13 0.05 291);
+  --surface: oklch(0.17 0.05 291);
+  --surface-2: oklch(0.21 0.05 291);
+  --border: oklch(0.29 0.04 291);
+  --text: oklch(0.97 0.005 291);
+  --muted: oklch(0.67 0.02 291);
+  --primary: oklch(0.499 0.265 283.1);
+  --primary-hover: oklch(0.56 0.26 283.1);
+  --primary-soft: oklch(0.499 0.265 283.1 / 0.14);
+  --primary-text: oklch(0.78 0.12 283);
+  --status-running: oklch(0.72 0.17 155);
+  --status-pending: oklch(0.8 0.15 85);
+  --status-error: oklch(0.65 0.2 25);
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --sans: "ABC Diatype", Inter, system-ui, sans-serif;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.5;
+  min-height: 100%;
+}
+
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+h1, h2, h3 { font-weight: 500; text-wrap: pretty; }
+
+button.primary {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+button.primary:hover { background: var(--primary-hover); }
+button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.ghost {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.chip {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chip.active { border-color: var(--primary); color: var(--primary-text); background: var(--primary-soft); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot.running { background: var(--status-running); animation: pulse-running 2s ease-in-out infinite; }
+.dot.pending { background: var(--status-pending); }
+.dot.error { background: var(--status-error); }
+.dot.idle { background: var(--muted); animation: none; }
+
+@keyframes pulse-running {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes flash-ready {
+  from { background: var(--primary-soft); }
+  to { background: transparent; }
+}
+.flash-ready { animation: flash-ready 0.3s ease-out; }
+
+@keyframes log-stream {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+.log-stream { animation: log-stream 0.2s ease-out both; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.card-in { animation: card-in 0.3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
