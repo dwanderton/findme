@@ -42,6 +42,26 @@ python scripts/smoke.py --expect-degraded # full workflow against a running back
 Golden accuracy tests run the real ONNX models on CPU: the two crowd-photo
 assets share attendees that must cross-match at >= 0.90 cosine.
 
+## Development
+
+### API docs (Swagger UI)
+
+The API is specified in [openapi.yaml](openapi.yaml) (OpenAPI 3.1). Browse it with Swagger UI:
+
+```bash
+python3 -m http.server 8777
+# open http://localhost:8777/swagger.html
+```
+
+[swagger.html](swagger.html) loads Swagger UI 5 from CDN (older Swagger UI tooling, e.g.
+swagger-ui-watcher, only reads 3.0.x specs). Refresh the browser after editing the spec.
+
+After spec changes, regenerate the frontend types:
+
+```bash
+cd frontend && npm run gen-types
+```
+
 ## Architecture
 
 ```
@@ -66,7 +86,9 @@ S3 API lacks CORS (hence the upload endpoint owns ingest).
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md). Needs `RUNPOD_API_KEY` and `GOOGLE_MAPS_API_KEY`;
+See [DEPLOY.md](DEPLOY.md) (includes the live resource map and the Runpod-side
+env table: VLM_BASE_URL, VLM_MODEL, RUNPOD_API_KEY on-worker, CORS_ORIGINS,
+DEBUG_UI). Needs `RUNPOD_API_KEY` and `GOOGLE_MAPS_API_KEY`;
 Vercel hosts the frontend. Standing cost when idle: the 20 GB volume
 ($1.40/mo); all compute is flex min=0.
 

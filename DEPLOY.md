@@ -41,3 +41,19 @@ findme.app.factory:create_app` + `npm run dev`.
 Flex min=0 everywhere: $0 idle. Standing cost = 20 GB volume ($1.40/mo).
 Demo-day warm worker optional: set min=1 on findme-enroll for the hour,
 turn it back to 0 after (checklist, not infra).
+
+## Live resource map (deployed 2026-11-03)
+
+| Resource | ID / URL |
+|----------|----------|
+| API endpoint (LB, GPU) | fyn95actlrze1c -> https://fyn95actlrze1c.api.runpod.ai (gateway requires Bearer RUNPOD_API_KEY) |
+| VLM endpoint (QUEUE, worker-v1-vllm v2.25.0, Qwen2.5-VL-7B-AWQ) | qqdg8tztrj83bm -> VLM_BASE_URL https://api.runpod.ai/v2/qqdg8tztrj83bm/openai |
+| Volume (US-NE-1, 20 GB) | n8eck87ef2 (mounts /runpod-volume; HF cache for the VLM lives here) |
+| Registry credential (ghcr) | cmw01ek13007vydkiux2k0l2s |
+| Frontend | https://findme-mocha.vercel.app (Vercel project "findme"; env BACKEND_URL + RUNPOD_API_KEY) |
+
+Env on the api endpoint: GOOGLE_MAPS_API_KEY, VLM_BASE_URL, VLM_MODEL,
+RUNPOD_API_KEY (for the vlm gateway), CORS_ORIGINS, DEBUG_UI. Change with
+update-endpoint; env edits cut a release that rolls as workers cycle.
+First VLM cold start downloads ~6 GB of weights to the volume HF cache
+(minutes); later cold starts read the cache.
