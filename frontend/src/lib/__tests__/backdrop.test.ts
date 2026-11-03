@@ -20,3 +20,17 @@ describe("pickTiles", () => {
     expect(pickTiles([], [])).toEqual([]);
   });
 });
+
+import { columnize } from "../../components/Backdrop";
+
+describe("columnize", () => {
+  it("round-robins tiles into four columns", () => {
+    const cols = columnize(["a", "b", "c", "d", "e", "f"], 4);
+    expect(cols).toEqual([["a", "e"], ["b", "f"], ["c"], ["d"]]);
+  });
+
+  it("handles fewer tiles than columns", () => {
+    const cols = columnize(["a", "b"], 4);
+    expect(cols.map((c) => c.length)).toEqual([1, 1, 0, 0]);
+  });
+});

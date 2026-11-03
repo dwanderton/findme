@@ -39,8 +39,8 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
   const [gps, setGps] = useState<{ withGps: number; total: number } | undefined>(undefined);
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px", position: "relative" }}>
-      <Backdrop uploadUrls={tiles} servedUrls={servedTiles} />
+    <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
+      <Backdrop uploadUrls={tiles} servedUrls={servedTiles} dimmed={ready} />
       <DebugConsole albumId={albumId} />
       <Banners />
       <h1 style={{ fontSize: "1.3rem" }}>
