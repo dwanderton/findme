@@ -74,18 +74,16 @@ export function Results({
   if (!resp) return <div className="card mono" style={{ color: "var(--muted)" }}>searching…</div>;
 
   const visible = filterMatches(resp.matches, band, tags);
-  const strongCount = resp.matches.filter((m) => m.band === "strong").length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="results">
       <div className="mono" style={{ fontSize: "0.85rem" }}>
-        you appear in <b>{resp.matches.length}</b> of {resp.album.photos} photos · {strongCount} strong ·{" "}
-        {resp.matches.length - strongCount} possible
+        you appear in <b>{resp.matches.length}</b> of {resp.album.photos} photos
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <button className={`chip ${band === "all" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("all"))}>all bands</button>
-        <button className={`chip ${band === "strong" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("strong"))}>strong only</button>
+        <button className={`chip ${band === "all" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("all"))}>all</button>
+        <button className={`chip ${band === "strong" ? "active" : ""}`} onClick={() => viewTransition(() => setBand("strong"))}>strong</button>
         {tagCounts(resp.matches).map(([t, n]) => (
           <button
             key={t}
