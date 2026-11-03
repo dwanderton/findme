@@ -19,11 +19,16 @@
 }
 
 html, body {
-  background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   line-height: 1.5;
   min-height: 100%;
+}
+
+/* Background on html only. When body is also opaque, its background paints
+   over position:fixed z-index:-1 layers (the album mosaic backdrop). */
+html {
+  background: var(--bg);
 }
 
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
