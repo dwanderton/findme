@@ -606,6 +606,10 @@ components:
               type: integer
             total:
               type: integer
+        venue:
+          anyOf:
+          - $ref: '#/components/schemas/Venue'
+          - type: 'null'
         startedAt:
           type: string
           format: date-time

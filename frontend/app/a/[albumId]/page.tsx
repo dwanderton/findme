@@ -8,8 +8,9 @@ import { Banners } from "@/components/Banners";
 import { DebugConsole } from "@/components/DebugConsole";
 import { Enroll } from "@/components/Enroll";
 import { Progress } from "@/components/Progress";
-import { AlbumActions, Results } from "@/components/Results";
+import { Results } from "@/components/Results";
 import { Upload } from "@/components/Upload";
+import { VenueLink } from "@/components/Venue";
 import { COPY } from "@/lib/copy";
 import { viewTransition } from "@/lib/viewTransition";
 
@@ -52,6 +53,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
   useEffect(() => {
     const storedUser = localStorage.getItem(`user:${albumId}`);
     if (storedUser) setUserId(storedUser);
+    setOwner(localStorage.getItem(`owner:${albumId}`));
     void fetch(`/api/albums/${albumId}/status`)
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => {
@@ -60,15 +62,22 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
           return;
         }
         setCommitted(s.stage !== "received");
-        if (s.stage === "ready") setReady(true);
+        if (s.stage === "ready") {
+          setReady(true);
+          setGps(s.gpsCoverage);
+        }
+        if (s.venue) setVenue(s.venue);
       })
       .catch(() => setCommitted(false));
   }, [albumId]);
   const [tiles, setTiles] = useState<string[]>([]);
   const [servedTiles, setServedTiles] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [owner, setOwner] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [gps, setGps] = useState<{ withGps: number; total: number } | null>(null);
   const [venue, setVenue] = useState<{ label: string; lat: number; lon: number; source: string } | null>(null);
+  const needsVenue = Boolean(owner && gps && gps.withGps === 0 && !venue);
 
   return (
     <>
@@ -96,13 +105,10 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         {committed === true && !ready && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>INDEXING</span>
-            <Progress albumId={albumId} onReady={() => viewTransition(() => setReady(true))} />
-          </section>
-        )}
-        {committed !== null && !ready && !userId && (
-          <section className="card card-in">
-            <span className="mono" style={cardLabel}>2 · YOU</span>
-            <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
+            <Progress
+              albumId={albumId}
+              onReady={(s) => viewTransition(() => { setReady(true); setGps(s.gpsCoverage ?? null); })}
+            />
           </section>
         )}
         {userId && !ready && <ResultsSkeleton />}
@@ -112,10 +118,10 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
             <Enroll onFind={(uid) => { localStorage.setItem(`user:${albumId}`, uid); viewTransition(() => setUserId(uid)); }} />
           </section>
         )}
-        {userId && ready && (
+        {userId && ready && needsVenue && <VenueLink albumId={albumId} venue={venue} onChange={setVenue} />}
+        {userId && ready && !needsVenue && (
           <Results key={venue?.label ?? "none"} albumId={albumId} userId={userId} venue={venue} onVenueChange={setVenue} onThumbs={setServedTiles} />
         )}
-        <AlbumActions albumId={albumId} userId={userId} ready={ready} />
       </div>
       </main>
     </>

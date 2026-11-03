@@ -24,6 +24,25 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   await expect(enroll.getByText(/face \d+px/)).toBeVisible({ timeout: 60_000 });
 
   await page.getByRole("button", { name: "Find me" }).click();
+
+  const albumId = page.url().split("/a/")[1];
+  const needsVenue = await page
+    .getByTestId("venue-link")
+    .waitFor({ state: "visible", timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (needsVenue) {
+    await page.evaluate(async (id) => {
+      const owner = localStorage.getItem(`owner:${id}`);
+      await fetch(`/api/albums/${id}/venue`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json", "x-owner-token": owner ?? "" },
+        body: JSON.stringify({ venue: { label: "Shoreline Amphitheatre", lat: 37.4267, lon: -122.0806 } }),
+      });
+    }, albumId);
+    await page.reload();
+  }
+
   await expect(page.getByTestId("results")).toBeVisible({ timeout: 90_000 });
   await expect(page.getByTestId("results").getByText(/you appear in/)).toBeVisible();
 
@@ -39,12 +58,10 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
   await expect(page.getByTestId("debug-console")).not.toBeVisible();
 });
 
-test("backtick guarded inside inputs and share disclosure present", async ({ page }) => {
+test("backtick guarded inside inputs", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Create an album" }).click();
   await page.waitForURL(/\/a\//);
-
-  await expect(page.getByText(/anyone with this link/)).toBeVisible();
 
   const input = page.getByTestId("venue-link").locator("input").first();
   const hasVenue = await input.isVisible().catch(() => false);

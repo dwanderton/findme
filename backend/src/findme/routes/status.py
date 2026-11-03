@@ -33,6 +33,7 @@ async def album_status(album_id: str, request: Request):
         "facesFound": int(counters.get("embedding", {}).get("facesFound", 0)),
         "stages": STAGES,
         "gpsCoverage": gps_coverage(meta),
+        "venue": meta.get("venue"),
         "startedAt": None,
         "error": meta.get("error"),
     }
