@@ -280,6 +280,7 @@ export interface components {
                 withGps?: number;
                 total?: number;
             };
+            venue?: components["schemas"]["Venue"] | null;
             /** Format: date-time */
             startedAt?: string;
             error?: components["schemas"]["Error"] | null;
