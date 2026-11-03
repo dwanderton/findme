@@ -22,12 +22,17 @@ export function DebugConsole({ albumId }: { albumId?: string }) {
 
   useEffect(() => {
     installFetchInterceptor();
+    setOpen(localStorage.getItem("debug:open") === "1");
+    const persist = (next: boolean) => {
+      localStorage.setItem("debug:open", next ? "1" : "0");
+      return next;
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "`" && shouldToggleOnBacktick(e.target)) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((o) => persist(!o));
       }
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setOpen(() => persist(false));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

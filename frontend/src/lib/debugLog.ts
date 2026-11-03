@@ -40,12 +40,18 @@ export function installFetchInterceptor() {
     try {
       const resp = await orig(input, init);
       const requestId = resp.headers.get("x-request-id") ?? undefined;
-      pushClientEvent(
-        "fetch",
-        resp.ok ? "info" : resp.status >= 500 ? "error" : "warn",
-        { method: init?.method ?? "GET", path: url.split("?")[0], status: resp.status, ms: Math.round(performance.now() - started) },
-        requestId,
-      );
+      const data: Record<string, unknown> = {
+        method: init?.method ?? "GET",
+        path: url.split("?")[0],
+        status: resp.status,
+        ms: Math.round(performance.now() - started),
+      };
+      if (url.startsWith("/api/warmup")) {
+        try {
+          Object.assign(data, await resp.clone().json());
+        } catch {}
+      }
+      pushClientEvent("fetch", resp.ok ? "info" : resp.status >= 500 ? "error" : "warn", data, requestId);
       return resp;
     } catch (e) {
       pushClientEvent("fetch.failed", "error", { method: init?.method ?? "GET", path: url.split("?")[0], ms: Math.round(performance.now() - started) });
