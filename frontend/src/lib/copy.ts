@@ -2,7 +2,7 @@ export const COPY = {
   appName: "findMe",
   tagline: "Find yourself in seconds",
   enrollDrop: "Drop a photo of you. A clear, frontal shot works best.",
-  enrollMore: "Add up to 4 more. Different angles and lighting improve recall.",
+  enrollMoreHint: "Different angles and lighting improve recall.",
   enrollCta: "Find me",
   multipleFaces: "Several faces found, using the largest.",
   noFace: "No face found, try another.",

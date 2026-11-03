@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canAddMore, canFind, enrollReducer, initialEnroll } from "../enrollState";
+import { canAddMore, canFind, enrollReducer, initialEnroll, remainingSelfies } from "../enrollState";
 
 const face = (i: number) => ({ selfie: i, facePx: 120 + i, multipleFaces: false });
 
@@ -33,6 +33,24 @@ describe("enroll state machine", () => {
     expect(s.chips.filter((c) => c.state === "ok").length).toBe(5);
     expect(canAddMore(s)).toBe(false);
     expect(canFind(s)).toBe(true);
+  });
+
+  it("remainingSelfies counts down and hits zero at the cap", () => {
+    expect(remainingSelfies(initialEnroll)).toBe(5);
+    let s = enrollReducer(initialEnroll, { type: "submit", names: ["a", "b"] });
+    expect(remainingSelfies(s)).toBe(3);
+    s = enrollReducer(s, { type: "success", userId: "u1", faces: [face(0), face(1)] });
+    expect(remainingSelfies(s)).toBe(3);
+    s = enrollReducer(s, { type: "submit", names: ["c", "d", "e"] });
+    s = enrollReducer(s, { type: "success", userId: "u1", faces: [face(2), face(3), face(4)] });
+    expect(remainingSelfies(s)).toBe(0);
+    expect(canAddMore(s)).toBe(false);
+  });
+
+  it("failed chips free their slots", () => {
+    let s = enrollReducer(initialEnroll, { type: "submit", names: ["a"] });
+    s = enrollReducer(s, { type: "failure", message: "No face found, try another.", selfie: 0 });
+    expect(remainingSelfies(s)).toBe(5);
   });
 
   it("multipleFaces carried to chip", () => {
