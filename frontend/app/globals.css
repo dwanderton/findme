@@ -125,3 +125,72 @@ button {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---- Apple-weather-style condition effects on the WEATHER card ---- */
+.wx-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+/* clear day: sun glow top-right; clear night: starfield */
+.wx-clear {
+  background: radial-gradient(circle at 82% 16%, rgba(255,224,138,0.55) 0%, rgba(255,224,138,0) 42%);
+}
+.wx-clear.wx-night {
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.8) 50%, transparent 50%),
+    radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.7) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 78% 44%, rgba(255,255,255,0.85) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.6) 50%, transparent 50%),
+    radial-gradient(circle at 80% 22%, rgba(220,225,255,0.5) 0%, rgba(220,225,255,0) 30%);
+}
+
+/* clouds: drifting soft blobs */
+.wx-cloudy::before, .wx-cloudy::after,
+.wx-fog::before, .wx-fog::after {
+  content: ""; position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.18); filter: blur(14px);
+  width: 120px; height: 46px; top: 24px; left: -40px;
+  animation: wx-drift 18s linear infinite;
+}
+.wx-cloudy::after, .wx-fog::after { top: 70px; left: -80px; width: 160px; height: 52px; animation-duration: 26s; opacity: 0.7; }
+@keyframes wx-drift { from { transform: translateX(-20px); } to { transform: translateX(320px); } }
+.wx-fog { backdrop-filter: blur(1px); }
+.wx-fog::before, .wx-fog::after { background: rgba(255,255,255,0.28); }
+
+/* rain streaks */
+.wx-rain {
+  background-image: repeating-linear-gradient(105deg, rgba(255,255,255,0.22) 0 1px, transparent 1px 9px);
+  background-size: 200% 200%;
+  animation: wx-rain 0.7s linear infinite;
+}
+@keyframes wx-rain { from { background-position: 0 0; } to { background-position: -40px 120px; } }
+
+/* snow */
+.wx-snow {
+  background-image:
+    radial-gradient(2px 2px at 20% 10%, #fff 50%, transparent 50%),
+    radial-gradient(2px 2px at 50% 30%, #fff 50%, transparent 50%),
+    radial-gradient(2px 2px at 75% 15%, #fff 50%, transparent 50%),
+    radial-gradient(2px 2px at 35% 50%, #fff 50%, transparent 50%),
+    radial-gradient(2px 2px at 85% 55%, #fff 50%, transparent 50%);
+  background-size: 100% 140px;
+  animation: wx-snow 6s linear infinite;
+}
+@keyframes wx-snow { from { background-position: 0 -40px; } to { background-position: 0 140px; } }
+
+/* thunder: periodic flash */
+.wx-thunder::before {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(255,255,255,0.0);
+  animation: wx-flash 5s steps(1) infinite;
+}
+@keyframes wx-flash {
+  0%, 92%, 100% { background: rgba(255,255,255,0); }
+  93% { background: rgba(255,255,255,0.45); }
+  94% { background: rgba(255,255,255,0); }
+  96% { background: rgba(255,255,255,0.3); }
+  97% { background: rgba(255,255,255,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wx-cloudy::before, .wx-cloudy::after, .wx-fog::before, .wx-fog::after,
+  .wx-rain, .wx-snow, .wx-thunder::before { animation: none; }
+}

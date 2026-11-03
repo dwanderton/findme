@@ -16,6 +16,7 @@ import {
   type FindResponse,
   type Match,
 } from "@/lib/results";
+import { weatherVisual } from "@/lib/weatherVisual";
 
 export function Results({ albumId, userId, onThumbs }: { albumId: string; userId: string; onThumbs?: (urls: string[]) => void }) {
   const onThumbsRef = useRef(onThumbs);
@@ -142,6 +143,53 @@ const cardLabel: React.CSSProperties = {
   marginBottom: 8,
 };
 
+function WeatherCard({ m }: { m: Match }) {
+  const w = m.weather;
+  if (!w.present) {
+    return (
+      <div className="card card-in">
+        <span className="mono" style={cardLabel}>WEATHER</span>
+        <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{weatherLine(w)}</p>
+      </div>
+    );
+  }
+  const v = weatherVisual(w.condition, w.localTime);
+  return (
+    <div
+      className="card-in weather-card"
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 10,
+        border: "1px solid var(--border)",
+        background: v.gradient,
+        color: v.text,
+        minHeight: 150,
+        padding: 14,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <div className={`wx-fx wx-${v.family}${v.night ? " wx-night" : ""}`} aria-hidden />
+      <div style={{ position: "relative" }}>
+        <span className="mono" style={{ fontSize: "0.62rem", letterSpacing: "0.1em", opacity: 0.85 }}>WEATHER</span>
+      </div>
+      <div style={{ position: "relative" }}>
+        <div className="mono" style={{ fontSize: "2.4rem", fontWeight: 300, lineHeight: 1 }}>
+          {Math.round(w.tempC!)}°
+        </div>
+        <div style={{ fontSize: "0.9rem", marginTop: 4, textTransform: "capitalize" }}>{w.condition}</div>
+        <div className="mono" style={{ fontSize: "0.72rem", opacity: 0.85, marginTop: 6 }}>
+          {w.localTime ? `${w.localTime} local` : ""}
+          {w.windKmh ? ` · wind ${w.windKmh} km/h` : ""}
+          {w.basis === "venue-location" ? " · user-supplied venue" : ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ExpandedPanel({ m }: { m: Match }) {
   const hasMap = m.place.present && typeof m.place.lat === "number" && typeof m.place.lon === "number";
   const d = 0.004;
@@ -166,13 +214,7 @@ function ExpandedPanel({ m }: { m: Match }) {
         )}
       </div>
 
-      <div className="card card-in">
-        <span className="mono" style={cardLabel}>WEATHER</span>
-        <p className="mono" style={{ fontSize: "0.8rem" }}>{weatherLine(m.weather)}</p>
-        {m.weather.present && (
-          <p className="mono" style={{ fontSize: "1.6rem", marginTop: 6 }}>{m.weather.tempC}°C</p>
-        )}
-      </div>
+      <WeatherCard m={m} />
 
       <div className="card card-in">
         <span className="mono" style={cardLabel}>LOCATION</span>
