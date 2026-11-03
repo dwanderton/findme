@@ -24,16 +24,19 @@ export type FindResponse = {
   gpsCoverage?: { withGps: number; total: number };
 };
 
-export function cameraLine(c: Match["camera"]): string {
-  if (!c.present) return "";
-  const parts = [
+export function cameraParts(c: Match["camera"]): string[] {
+  if (!c.present) return [];
+  return [
     [c.make, c.model].filter(Boolean).join(" "),
     c.focalLengthMm ? `${c.focalLengthMm}mm` : null,
     c.aperture ? `f/${c.aperture}` : null,
     c.shutter ?? null,
     c.iso ? `ISO ${c.iso}` : null,
-  ].filter(Boolean);
-  return parts.join(" · ");
+  ].filter((p): p is string => Boolean(p));
+}
+
+export function cameraLine(c: Match["camera"]): string {
+  return cameraParts(c).join(" · ");
 }
 
 export function weatherLine(w: Match["weather"]): string {
