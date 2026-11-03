@@ -11,6 +11,7 @@ class ExifData:
     lon: float | None = None
     taken_at: str | None = None
     taken_at_source: str | None = None
+    file_modified: str | None = None
     make: str | None = None
     model: str | None = None
     lens: str | None = None

@@ -8,6 +8,7 @@ export type Match = {
   thumbUrl: string;
   fullUrl: string;
   takenAt?: string;
+  fileModified?: string;
   camera: { present: boolean; reason?: string; make?: string; model?: string; lens?: string; focalLengthMm?: number; aperture?: number; shutter?: string; iso?: number };
   place: { present: boolean; reason?: string; source?: string; label?: string; lat?: number; lon?: number };
   weather: { present: boolean; reason?: string; basis?: string; tempC?: number; condition?: string; windKmh?: number; localTime?: string };

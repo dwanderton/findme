@@ -22,6 +22,8 @@ def _merge_exif(file_exif: ExifData, client: dict | None) -> ExifData:
         merged.lon = client.get("lon")
     if client.get("taken_at") and not merged.taken_at:
         merged.taken_at = client["taken_at"]
+    if client.get("file_modified"):
+        merged.file_modified = client["file_modified"]
     for field in ("make", "model", "lens", "shutter"):
         if client.get(field) and not getattr(merged, field):
             setattr(merged, field, client[field])
