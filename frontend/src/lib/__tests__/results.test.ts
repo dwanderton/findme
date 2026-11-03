@@ -33,8 +33,14 @@ describe("panel lines", () => {
     expect(cameraLine({ present: true, model: "ILCE-7M4", iso: 400 })).toBe("ILCE-7M4 · ISO 400");
   });
 
-  it("camera parts split one per line", () => {
-    expect(cameraParts(base.camera)).toEqual(["Sony ILCE-7M4", "35mm", "f/1.8", "1/250", "ISO 400"]);
+  it("camera parts carry a field label per line", () => {
+    expect(cameraParts(base.camera)).toEqual([
+      { label: "camera", value: "Sony ILCE-7M4" },
+      { label: "focal length", value: "35mm" },
+      { label: "f-stop", value: "f/1.8" },
+      { label: "shutter", value: "1/250" },
+      { label: "iso", value: "ISO 400" },
+    ]);
     expect(cameraParts({ present: false, reason: "exif-stripped" })).toEqual([]);
   });
 

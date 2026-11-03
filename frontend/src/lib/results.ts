@@ -24,19 +24,24 @@ export type FindResponse = {
   gpsCoverage?: { withGps: number; total: number };
 };
 
-export function cameraParts(c: Match["camera"]): string[] {
+export type CameraField = { label: string; value: string };
+
+export function cameraParts(c: Match["camera"]): CameraField[] {
   if (!c.present) return [];
-  return [
-    [c.make, c.model].filter(Boolean).join(" "),
-    c.focalLengthMm ? `${c.focalLengthMm}mm` : null,
-    c.aperture ? `f/${c.aperture}` : null,
-    c.shutter ?? null,
-    c.iso ? `ISO ${c.iso}` : null,
-  ].filter((p): p is string => Boolean(p));
+  const fields: CameraField[] = [];
+  const name = [c.make, c.model].filter(Boolean).join(" ");
+  if (name) fields.push({ label: "camera", value: name });
+  if (c.focalLengthMm) fields.push({ label: "focal length", value: `${c.focalLengthMm}mm` });
+  if (c.aperture) fields.push({ label: "f-stop", value: `f/${c.aperture}` });
+  if (c.shutter) fields.push({ label: "shutter", value: c.shutter });
+  if (c.iso) fields.push({ label: "iso", value: `ISO ${c.iso}` });
+  return fields;
 }
 
 export function cameraLine(c: Match["camera"]): string {
-  return cameraParts(c).join(" · ");
+  return cameraParts(c)
+    .map((f) => f.value)
+    .join(" · ");
 }
 
 export function weatherLine(w: Match["weather"]): string {
