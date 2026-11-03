@@ -52,8 +52,8 @@ python3 -m http.server 8777
 # open http://localhost:8777/swagger.html
 ```
 
-[swagger.html](swagger.html) loads Swagger UI 5 from CDN (older Swagger UI tooling, e.g.
-swagger-ui-watcher, only reads 3.0.x specs). Refresh the browser after editing the spec.
+[swagger.html](swagger.html) loads Swagger UI 5 from CDN. Refresh the browser after
+editing the spec.
 
 After spec changes, regenerate the frontend types:
 
