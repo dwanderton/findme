@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 RETRYABLE = {
+    "INDEX_NOT_READY",
     "UPSTREAM_FACE_ENGINE",
     "COLD_START",
     "RATE_LIMITED",

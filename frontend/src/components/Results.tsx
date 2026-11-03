@@ -149,7 +149,7 @@ function ExpandedPanel({ m }: { m: Match }) {
   );
 }
 
-export function AlbumActions({ albumId, userId }: { albumId: string; userId: string | null }) {
+export function AlbumActions({ albumId, userId, ready }: { albumId: string; userId: string | null; ready: boolean }) {
   const [copied, setCopied] = useState(false);
   const [owner, setOwner] = useState<string | null>(null);
 
@@ -174,7 +174,7 @@ export function AlbumActions({ albumId, userId }: { albumId: string; userId: str
       >
         {copied ? "link copied" : "copy share link"}
       </button>
-      {userId && (
+      {userId && ready && (
         <a className="ghost" style={{ textDecoration: "none", padding: "7px 14px" }} href={`/api/albums/${albumId}/download?userId=${userId}`}>
           download matches
         </a>
