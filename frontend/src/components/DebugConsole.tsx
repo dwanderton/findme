@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   clientEvents,
@@ -38,17 +38,32 @@ export function DebugConsole({ albumId }: { albumId?: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const cursor = useRef(0);
+
   const refresh = useCallback(async () => {
     if (!albumId) return;
     try {
-      const r = await fetch(`/api/debug/${albumId}`);
-      if (!r.ok) return;
-      const body = await r.json();
-      setServerEvents(
-        (body.events as AnyEvent[]).map((e) => ({ ...e, src: e.src === "external" ? "external" : e.src })),
-      );
-      setSnapshot(body.snapshot);
+      // Pages are 200 events; loop until the server has no more for this cursor.
+      for (let page = 0; page < 10; page++) {
+        const r = await fetch(`/api/debug/${albumId}?cursor=${cursor.current}`);
+        if (!r.ok) return;
+        const body = await r.json();
+        // Backend ts is epoch seconds; client events use Date.now() ms. Normalize to ms so the merge interleaves.
+        const events = (body.events as AnyEvent[]).map((e) => ({
+          ...e,
+          ts: typeof e.ts === "number" ? e.ts * 1000 : e.ts,
+        }));
+        cursor.current = body.cursor;
+        setSnapshot(body.snapshot);
+        if (events.length > 0) setServerEvents((prev) => [...prev, ...events].slice(-1000));
+        if (events.length < 200) break;
+      }
     } catch {}
+  }, [albumId]);
+
+  useEffect(() => {
+    cursor.current = 0;
+    setServerEvents([]);
   }, [albumId]);
 
   useEffect(() => {
@@ -99,7 +114,11 @@ export function DebugConsole({ albumId }: { albumId?: string }) {
           </button>
         )}
         <span style={{ marginLeft: "auto", color: "var(--muted)" }}>
-          google: {circuits.google ?? "?"} · open-meteo: {circuits["open-meteo"] ?? "?"}
+          {Object.entries(circuits).length > 0
+            ? Object.entries(circuits)
+                .map(([name, state]) => `${name}: ${state}`)
+                .join(" · ")
+            : "circuits: ?"}
         </span>
         <button
           className="chip"

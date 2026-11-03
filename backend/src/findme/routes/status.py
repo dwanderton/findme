@@ -51,15 +51,20 @@ async def debug_trace(album_id: str, request: Request, cursor: int = 0):
         e["src"] = e.get("src", "unknown")
     snapshot = {
         "endpointHealth": getattr(request.app.state, "health_snapshot", lambda: {})() or {},
-        "rateLimit": {"windowRemaining": None, "windowMax": None},
         "circuits": _circuits(),
-        "enrichBudget": {"used": None, "max": 50},
     }
     return {"cursor": new_cursor, "events": events, "snapshot": snapshot}
 
 
 def _circuits() -> dict:
     import findme.geo as geo
+    import findme.places as places
+    import findme.routes.staticmap as staticmap
     import findme.weather as weather
 
-    return {"google": geo.circuit.state, "open-meteo": weather.circuit.state}
+    return {
+        "google": geo.circuit.state,
+        "places": places.circuit.state,
+        "open-meteo": weather.circuit.state,
+        "staticmap": staticmap.circuit.state,
+    }

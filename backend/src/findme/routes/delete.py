@@ -32,11 +32,14 @@ async def link_venue(album_id: str, request: Request, x_owner_token: str | None 
         import httpx
 
         from findme.places import details
+        from findme.trace import writer_for
 
+        trace = writer_for(request.app.state.root, album_id, "places")
+        rid = request.headers.get("x-request-id", "")
         async with httpx.AsyncClient() as client:
-            venue = await details(client, body["placeId"], body.get("session", "no-session"))
+            venue = await details(client, body["placeId"], body.get("session", "no-session"), trace=trace, request_id=rid)
         if venue is None:
-            raise ApiError("UPSTREAM_FACE_ENGINE", "Place lookup failed; retry.")
+            raise ApiError("UPSTREAM_MAPS", "Place lookup failed; retry.")
     if not venue or not all(k in venue for k in ("label", "lat", "lon")):
         raise ApiError("UNSUPPORTED_MEDIA", "venue requires placeId or label, lat, lon.")
     venue["source"] = "user"

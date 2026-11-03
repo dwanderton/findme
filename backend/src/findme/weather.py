@@ -58,6 +58,8 @@ async def weather_at(
     taken_at: str,
     basis: str = "photo-gps",
     today: date | None = None,
+    trace=None,
+    request_id: str = "",
 ) -> Weather:
     dt = _parse(taken_at)
     if dt is None:
@@ -84,7 +86,7 @@ async def weather_at(
             "timezone": "auto",
         }
     try:
-        data = await get_json(client, circuit, url, params)
+        data = await get_json(client, circuit, url, params, trace=trace, request_id=request_id)
     except UpstreamDown:
         return Weather(present=False, reason="upstream-failed")
 

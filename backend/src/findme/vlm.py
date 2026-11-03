@@ -3,9 +3,13 @@ from __future__ import annotations
 import base64
 import json
 import os
+import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
+
+from findme.upstream import emit_external
 
 TAXONOMY = [
     "stage",
@@ -70,21 +74,31 @@ class VlmClient:
             return None
         return {"status": "ready", "caption": caption, "tags": tags, "altText": alt or caption}
 
-    async def _chat(self, client: httpx.AsyncClient, messages: list[dict], max_tokens: int = 300) -> str:
+    async def _chat(self, client: httpx.AsyncClient, messages: list[dict], max_tokens: int = 300, trace=None) -> str:
         headers = {}
         key = os.environ.get("RUNPOD_API_KEY", "")
         if key and "runpod.ai" in self.base_url:
             headers["Authorization"] = f"Bearer {key}"
-        resp = await client.post(
-            f"{self.base_url}/v1/chat/completions",
-            json={"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.2},
-            headers=headers,
-            timeout=TIMEOUT_S,
-        )
-        resp.raise_for_status()
+        host = urlparse(self.base_url).netloc
+        started = time.monotonic()
+        try:
+            resp = await client.post(
+                f"{self.base_url}/v1/chat/completions",
+                json={"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.2},
+                headers=headers,
+                timeout=TIMEOUT_S,
+            )
+            resp.raise_for_status()
+        except httpx.HTTPError as e:
+            ms = round((time.monotonic() - started) * 1000)
+            status = e.response.status_code if isinstance(e, httpx.HTTPStatusError) else None
+            emit_external(trace, "vlm", level="error", host=host, status=status, ms=ms, error=type(e).__name__)
+            raise
+        ms = round((time.monotonic() - started) * 1000)
+        emit_external(trace, "vlm", host=host, status=resp.status_code, ms=ms)
         return resp.json()["choices"][0]["message"]["content"]
 
-    async def caption_photo(self, client: httpx.AsyncClient, photo_id: str, image: bytes) -> dict:
+    async def caption_photo(self, client: httpx.AsyncClient, photo_id: str, image: bytes, trace=None) -> dict:
         hit = self.cached(photo_id)
         if hit:
             return hit
@@ -101,7 +115,7 @@ class VlmClient:
             }
         ]
         try:
-            content = await self._chat(client, messages)
+            content = await self._chat(client, messages, trace=trace)
         except (httpx.HTTPError, KeyError, IndexError):
             return {"status": "unavailable"}
         record = self._parse(content)

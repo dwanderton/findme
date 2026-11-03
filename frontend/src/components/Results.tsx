@@ -244,7 +244,7 @@ function WeatherCard({ m, albumId, onRefresh }: { m: Match; albumId: string; onR
   );
 }
 
-function LocationCard({ m }: { m: Match }) {
+function LocationCard({ m, albumId }: { m: Match; albumId: string }) {
   const [mapsDown, setMapsDown] = useState(false);
   const hasMap = m.place.present && typeof m.place.lat === "number" && typeof m.place.lon === "number";
   if (!hasMap) {
@@ -256,7 +256,7 @@ function LocationCard({ m }: { m: Match }) {
   }
   const d = 0.004;
   const osmSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${m.place.lon! - d},${m.place.lat! - d},${m.place.lon! + d},${m.place.lat! + d}&layer=mapnik&marker=${m.place.lat},${m.place.lon}`;
-  const mapSrc = `/api/staticmap?lat=${m.place.lat}&lon=${m.place.lon}&zoom=14`;
+  const mapSrc = `/api/staticmap?lat=${m.place.lat}&lon=${m.place.lon}&zoom=14&albumId=${albumId}`;
   return (
     <div className="card-in" style={{ position: "relative", overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)", minHeight: 230 }}>
       {mapsDown ? (
@@ -316,7 +316,7 @@ function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; o
 
       <WeatherCard m={m} albumId={albumId} onRefresh={onRefresh} />
 
-      <LocationCard m={m} />
+      <LocationCard m={m} albumId={albumId} />
 
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {camera && <p className="mono" style={{ fontSize: "0.8rem" }}>{camera}</p>}
