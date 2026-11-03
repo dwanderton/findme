@@ -35,7 +35,7 @@ STORY_PROMPT = (
     "no em dashes."
 )
 
-TIMEOUT_S = 30.0
+TIMEOUT_S = 120.0
 
 
 class VlmClient:
@@ -80,9 +80,14 @@ class VlmClient:
         return {"status": "ready", "caption": caption, "tags": tags, "altText": alt or caption}
 
     async def _chat(self, client: httpx.AsyncClient, messages: list[dict], max_tokens: int = 300) -> str:
+        headers = {}
+        key = os.environ.get("RUNPOD_API_KEY", "")
+        if key and "runpod.ai" in self.base_url:
+            headers["Authorization"] = f"Bearer {key}"
         resp = await client.post(
             f"{self.base_url}/v1/chat/completions",
             json={"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.2},
+            headers=headers,
             timeout=TIMEOUT_S,
         )
         resp.raise_for_status()
