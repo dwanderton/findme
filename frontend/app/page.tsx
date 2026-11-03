@@ -27,8 +27,8 @@ const FEATURES: [string, React.ReactNode][] = [
     <>
       <Ext href="https://github.com/deepinsight/insightface/tree/master/detection/scrfd">SCRFD</Ext> +{" "}
       <Ext href="https://arxiv.org/abs/1801.07698">ArcFace</Ext> on{" "}
-      <Ext href="https://docs.runpod.io/serverless/overview">Runpod serverless</Ext> GPUs. Upload a selfie, find every
-      photo you are in.
+      <Ext href="https://docs.runpod.io/serverless/overview">Runpod serverless</Ext> GPUs. Upload a selfie, upload an
+      album, find every photo you are in.
     </>,
   ],
   [
