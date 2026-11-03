@@ -9,7 +9,7 @@ export type Match = {
   fullUrl: string;
   takenAt?: string;
   camera: { present: boolean; reason?: string; make?: string; model?: string; lens?: string; focalLengthMm?: number; aperture?: number; shutter?: string; iso?: number };
-  place: { present: boolean; reason?: string; source?: string; label?: string };
+  place: { present: boolean; reason?: string; source?: string; label?: string; lat?: number; lon?: number };
   weather: { present: boolean; reason?: string; basis?: string; tempC?: number; condition?: string; windKmh?: number; localTime?: string };
   vlm: { status: string; caption?: string; tags?: string[]; altText?: string };
   enrichment: { status: string };

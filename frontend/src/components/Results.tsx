@@ -124,29 +124,69 @@ function MatchCard({ m, index, expanded, onToggle }: { m: Match; index: number; 
   );
 }
 
+const cardLabel: React.CSSProperties = {
+  fontSize: "0.62rem",
+  letterSpacing: "0.1em",
+  color: "var(--primary-text)",
+  display: "block",
+  marginBottom: 8,
+};
+
 function ExpandedPanel({ m }: { m: Match }) {
-  const rows: [string, string][] = [
-    ["PHOTO", photoLine(m.vlm)],
-    ["PLACE", placeLine(m.place)],
-    ["WEATHER", weatherLine(m.weather)],
-    ["CAMERA", cameraLine(m.camera)],
-  ];
+  const hasMap = m.place.present && typeof m.place.lat === "number" && typeof m.place.lon === "number";
+  const d = 0.004;
+  const mapSrc = hasMap
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${m.place.lon! - d},${m.place.lat! - d},${m.place.lon! + d},${m.place.lat! + d}&layer=mapnik&marker=${m.place.lat},${m.place.lon}`
+    : null;
   return (
-    <div className="card card-in" data-testid="panel">
-      <img src={`/api${m.fullUrl}`} alt={altText(m)} style={{ width: "100%", borderRadius: 6, marginBottom: 10 }} />
-      {rows.map(([label, value]) => (
-        <div key={label} className="mono" style={{ display: "grid", gridTemplateColumns: "76px 1fr", gap: 10, padding: "3px 0", fontSize: "0.78rem" }}>
-          <span style={{ color: "var(--primary-text)", letterSpacing: "0.06em" }}>{label}</span>
-          <span style={{ color: value === photoLine(m.vlm) && m.vlm.status === "ready" ? "var(--text)" : undefined }}>{value}</span>
-        </div>
-      ))}
-      {(m.vlm.tags?.length ?? 0) > 0 && (
-        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-          {m.vlm.tags!.map((t) => (
-            <span key={t} className="chip">{t}</span>
-          ))}
-        </div>
-      )}
+    <div
+      data-testid="panel"
+      style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}
+    >
+      <div className="card card-in" style={{ gridColumn: "1 / -1" }}>
+        <span className="mono" style={cardLabel}>PHOTO</span>
+        <img src={`/api${m.fullUrl}`} alt={altText(m)} style={{ width: "100%", maxHeight: 420, objectFit: "contain", borderRadius: 6 }} />
+        <p className="mono" style={{ fontSize: "0.78rem", marginTop: 8 }}>{photoLine(m.vlm)}</p>
+        {(m.vlm.tags?.length ?? 0) > 0 && (
+          <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+            {m.vlm.tags!.map((t) => (
+              <span key={t} className="chip">{t}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card card-in">
+        <span className="mono" style={cardLabel}>WEATHER</span>
+        <p className="mono" style={{ fontSize: "0.8rem" }}>{weatherLine(m.weather)}</p>
+        {m.weather.present && (
+          <p className="mono" style={{ fontSize: "1.6rem", marginTop: 6 }}>{m.weather.tempC}°C</p>
+        )}
+      </div>
+
+      <div className="card card-in">
+        <span className="mono" style={cardLabel}>LOCATION</span>
+        {mapSrc ? (
+          <>
+            <iframe
+              title="map"
+              src={mapSrc}
+              style={{ width: "100%", height: 150, border: "1px solid var(--border)", borderRadius: 6, filter: "invert(0.88) hue-rotate(200deg) saturate(0.6)" }}
+            />
+            <p className="mono" style={{ fontSize: "0.74rem", marginTop: 6 }}>{placeLine(m.place)}</p>
+          </>
+        ) : (
+          <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{placeLine(m.place)}</p>
+        )}
+      </div>
+
+      <div className="card card-in">
+        <span className="mono" style={cardLabel}>CAMERA</span>
+        <p className="mono" style={{ fontSize: "0.8rem" }}>{cameraLine(m.camera)}</p>
+        <p className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8 }}>
+          {m.takenAt ? `taken ${m.takenAt.slice(0, 10)} · ` : ""}match {m.band} · score {m.score.toFixed(2)}
+        </p>
+      </div>
     </div>
   );
 }
