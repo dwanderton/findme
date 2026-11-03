@@ -50,6 +50,9 @@ def test_commit_pipeline_dedupe_exif_thumbs_batches(ctx):
     assert body["accepted"] == 3
     reasons = sorted(x["reason"] for x in body["rejected"])
     assert reasons == ["duplicate", "undecodable"]
+    by_reason = {x["reason"]: x["name"] for x in body["rejected"]}
+    assert by_reason["undecodable"] == "broken.jpg"
+    assert by_reason["duplicate"] in ("dupe1.jpg", "dupe2.jpg")
 
     meta = load_meta(root, album_id)
     assert meta["stage"] == "embedding"

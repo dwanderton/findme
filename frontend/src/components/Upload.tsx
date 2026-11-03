@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { commitAlbum, uploadAll, type UploadProgress } from "@/lib/api";
-import { COPY } from "@/lib/copy";
+import { commitAlbum, uploadAll, type Rejection, type UploadProgress } from "@/lib/api";
+import { COPY, rejectionLine } from "@/lib/copy";
 import { STAGE_DWELL_MS } from "@/lib/pacing";
 import { preprocessFile, type PreppedPhoto } from "@/lib/preprocess";
 
@@ -23,6 +23,7 @@ export function Upload({
   const [gpsFound, setGpsFound] = useState(0);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [rejected, setRejected] = useState<Rejection[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const timers = useRef<number[]>([]);
   const nextAt = useRef(0);
@@ -50,6 +51,7 @@ export function Upload({
     if (!files.length) return;
     nextAt.current = 0;
     setMessage(null);
+    setRejected([]);
     schedule(() => setPhase("preprocessing"));
     const photos: PreppedPhoto[] = [];
     let gps = 0;
@@ -74,8 +76,10 @@ export function Upload({
     schedule(() => setPhase("committing"));
     try {
       const commit = await commitAlbum(albumId, result.uploaded);
+      const allRejected = [...result.rejected, ...commit.rejected];
       schedule(() => {
-        setMessage(`${commit.accepted} photos accepted${commit.rejected.length ? `, ${commit.rejected.length} rejected` : ""}`);
+        setMessage(`${commit.accepted} photos accepted${allRejected.length ? `, ${allRejected.length} rejected` : ""}`);
+        setRejected(allRejected);
         setPhase("done");
       });
       schedule(onCommitted);
@@ -120,6 +124,20 @@ export function Upload({
         {phase === "done" && <span className="mono" style={{ color: "var(--status-running)" }}>{message}</span>}
         {phase === "error" && <span className="mono" style={{ color: "var(--status-error)" }}>{message}</span>}
       </div>
+      {phase === "done" && rejected.length > 0 && (
+        <ul data-testid="rejected-list" style={{ listStyle: "none", marginTop: 8 }}>
+          {rejected.slice(0, 8).map((r, i) => (
+            <li key={`${r.name}-${i}`} className="mono" style={{ fontSize: "0.72rem", color: "var(--status-pending)", padding: "1px 0" }}>
+              {rejectionLine(r)}
+            </li>
+          ))}
+          {rejected.length > 8 && (
+            <li className="mono" style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
+              and {rejected.length - 8} more
+            </li>
+          )}
+        </ul>
+      )}
       <input
         ref={inputRef}
         type="file"
