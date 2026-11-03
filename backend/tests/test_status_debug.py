@@ -44,8 +44,11 @@ def test_debug_merged_cursor_and_snapshot(ctx):
     w.emit("external", "geocode.call", status=200)
     r = client.get(f"/debug/{album_id}")
     body = r.json()
-    assert body["cursor"] == 2
-    assert [e["event"] for e in body["events"]] == ["search.done", "geocode.call"]
+    # The request middleware adds server http events, so assert on the manual
+    # pair's presence and order rather than an exact list.
+    names = [e["event"] for e in body["events"]]
+    assert names.index("search.done") < names.index("geocode.call")
+    assert body["cursor"] == len(body["events"]) > 2
     assert body["snapshot"]["circuits"]["google"] in ("open", "closed")
     r2 = client.get(f"/debug/{album_id}", params={"cursor": body["cursor"]})
     assert r2.json()["events"] == []

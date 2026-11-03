@@ -4,7 +4,12 @@ WORKDIR /app
 
 COPY backend/pyproject.toml ./
 COPY backend/src ./src
-RUN pip install --no-cache-dir . onnxruntime-gpu nvidia-cublas-cu12 nvidia-cudnn-cu12 uvicorn
+# pyproject pulls CPU onnxruntime as a dependency; next to onnxruntime-gpu its files
+# shadow the GPU wheel and CUDAExecutionProvider disappears from available providers.
+# Strip the CPU wheel, then force-reinstall the GPU wheel so its files win.
+RUN pip install --no-cache-dir . onnxruntime-gpu nvidia-cublas-cu12 nvidia-cudnn-cu12 uvicorn \
+    && pip uninstall -y onnxruntime \
+    && pip install --no-cache-dir --force-reinstall --no-deps onnxruntime-gpu
 
 COPY assets/det_10g.onnx /models/det_10g.onnx
 COPY assets/w600k_r50.onnx /models/w600k_r50.onnx

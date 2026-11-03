@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
+import re
 import threading
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -10,7 +12,9 @@ from fastapi.responses import JSONResponse
 
 from findme import settings
 from findme.errors import ApiError
-from findme.trace import writer_for
+from findme.trace import global_writer, writer_for
+
+ALBUM_PATH = re.compile(r"/albums/([0-9a-fA-F-]{8,36})")
 
 
 def create_app(root: Path | None = None) -> FastAPI:
@@ -23,6 +27,36 @@ def create_app(root: Path | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["content-type", "x-owner-token"],
     )
+
+    @app.middleware("http")
+    async def trace_requests(request: Request, call_next):
+        started = time.monotonic()
+        response = await call_next(request)
+        if not settings.DEBUG_UI:
+            return response
+        path = request.url.path
+        rid = request.headers.get("x-request-id", "")
+        # /debug polling would trace itself; health checks are noise unless a
+        # request id marks them as user-initiated (the warmup route sends one).
+        if path.startswith("/debug") or (path in ("/ping", "/health") and not rid):
+            return response
+        album_id = request.query_params.get("albumId")
+        if not album_id:
+            m = ALBUM_PATH.search(path)
+            album_id = m.group(1) if m else None
+        status = response.status_code
+        trace = writer_for(app.state.root, album_id, "api") or global_writer(app.state.root, "api")
+        trace.emit(
+            "server",
+            "http",
+            level="error" if status >= 500 else "warn" if status >= 400 else "info",
+            request_id=rid,
+            method=request.method,
+            path=path,
+            status=status,
+            ms=round((time.monotonic() - started) * 1000),
+        )
+        return response
 
     @app.exception_handler(ApiError)
     async def api_error_handler(request: Request, exc: ApiError):
