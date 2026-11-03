@@ -23,7 +23,7 @@ DST = np.array(
     dtype=np.float32,
 )
 
-DEFAULT_MODELS_DIR = Path(__file__).resolve().parents[3] / "plans" / "reference" / "assets"
+DEFAULT_MODELS_DIR = Path(__file__).resolve().parents[3] / "assets"
 
 
 def models_dir() -> Path:

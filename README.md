@@ -32,9 +32,9 @@ place and weather states.
 ## Tests
 
 ```bash
-cd backend && .venv/bin/pytest            # 135: unit, routes, golden pipeline, integration
-cd frontend && npm test                   # 63: logic, state machines, voice lint
-cd frontend && npx playwright test        # 2: live-stack core pathway
+cd backend && .venv/bin/pytest            # unit, routes, golden pipeline, integration
+cd frontend && npm test                   # logic, state machines, voice lint
+cd frontend && npx playwright test        # live-stack core pathway
 python scripts/smoke.py --expect-degraded # full workflow against a running backend
 ```
 

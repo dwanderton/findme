@@ -5,7 +5,7 @@ Dry mode (default): drives the full workflow against a local backend
 (http://localhost:8000) with the real CPU face engine.
 
 Live mode (--base <url>): same flow against a deployed stack; records
-observed cold start and throughput as log lines for the plans decisions log.
+observed cold start and throughput as log lines.
 
 Forced-failure check: with --expect-degraded, asserts enrichment degrades
 (partial/upstream-failed/scrubbed) rather than 500ing when Google is absent.
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import httpx
 
-ASSETS = Path(__file__).resolve().parents[1] / "plans" / "reference" / "assets"
+ASSETS = Path(__file__).resolve().parents[1] / "assets"
 
 
 def log(msg: str) -> None:

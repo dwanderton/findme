@@ -6,8 +6,8 @@ COPY backend/pyproject.toml ./
 COPY backend/src ./src
 RUN pip install --no-cache-dir . onnxruntime-gpu nvidia-cublas-cu12 nvidia-cudnn-cu12 uvicorn
 
-COPY plans/reference/assets/det_10g.onnx /models/det_10g.onnx
-COPY plans/reference/assets/w600k_r50.onnx /models/w600k_r50.onnx
+COPY assets/det_10g.onnx /models/det_10g.onnx
+COPY assets/w600k_r50.onnx /models/w600k_r50.onnx
 
 ENV FINDME_MODELS_DIR=/models \
     FINDME_INLINE_JOBS=true \

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
 
-const ASSETS = path.resolve(__dirname, "../../plans/reference/assets");
+const ASSETS = path.resolve(__dirname, "../../assets");
 
 test("core pathway: create, upload, index, enroll, find, panel, console", async ({ page }) => {
   await page.goto("/");

@@ -10,7 +10,7 @@
 | Playwright e2e (live local stack) | 2 | ~7 s |
 | Smoke script (full pathway, degradation asserted) | 1 run | ~7 s |
 
-## Security checklist (plans/high-level/06) — walked
+## Security checklist — walked
 
 - Keys server-side: GOOGLE_MAPS_API_KEY read only in backend modules (`geo.py`,
   `places.py`); RUNPOD_API_KEY attached only in the Next server proxy. Grep of
@@ -22,7 +22,7 @@
   429 + Retry-After before upstream is touched.
 - Upstream failure ladder: cluster cache, 3 s timeouts, retry x2 with
   Retry-After override, independent 60 s circuits, 50-call budget, degradation
-  statuses — table-driven tests mirror plans/high-level/04 exactly.
+  statuses — all table-driven test covered.
 - Debug endpoint: DEBUG_UI-gated, redaction-at-write verified by test
   (secrets absent from raw trace files).
 - Delete: erases album tree + enrich cache + vectors; verified by 404 re-read.
@@ -39,7 +39,7 @@
   fields into the story prompt is conceivable; records are truncated at 6000
   chars and tags filtered to the fixed list.
 
-## Design re-audit (plans/high-level/09) vs rendered UI
+## Design re-audit vs rendered UI
 
 - Dark-first OKLCH tokens, purple as anchor only (CTA, focus, active chips):
   pass.

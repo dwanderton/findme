@@ -3,17 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-DATACENTER = "US-IL-1"
 VOLUME_MOUNT = Path("/runpod-volume")
 
-GPU_WORKERS = (0, 20)
-GPU_LB_WORKERS = (0, 2)
-CPU_WORKERS = (0, 4)
-CPU_LB_WORKERS = (0, 2)
-VLM_WORKERS = (0, 2)
-
-IDLE_TIMEOUT_S = 30
-EXECUTION_TIMEOUT_MS = 600_000
 BATCH_SIZE = 50
 
 MAX_PHOTOS = int(os.environ.get("MAX_PHOTOS", "5000"))
