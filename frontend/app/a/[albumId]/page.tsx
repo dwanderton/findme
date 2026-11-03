@@ -46,7 +46,7 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
           <VenueLink albumId={albumId} venue={venue} onChange={setVenue} />
         )}
         {userId && ready && <Results key={venue?.label ?? "none"} albumId={albumId} userId={userId} onThumbs={() => {}} />}
-        <AlbumActions albumId={albumId} userId={userId} />
+        <AlbumActions albumId={albumId} userId={userId} ready={ready} />
       </div>
     </main>
   );
