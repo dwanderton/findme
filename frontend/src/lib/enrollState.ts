@@ -27,6 +27,10 @@ export function canAddMore(s: EnrollState): boolean {
   return s.chips.filter((c) => c.state === "ok").length < MAX_SELFIES && !s.busy;
 }
 
+export function remainingSelfies(s: EnrollState): number {
+  return Math.max(0, MAX_SELFIES - s.chips.filter((c) => c.state !== "failed").length);
+}
+
 export function canFind(s: EnrollState): boolean {
   return s.userId !== null && !s.busy;
 }

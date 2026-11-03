@@ -3,7 +3,7 @@
 import { useReducer, useRef } from "react";
 
 import { COPY } from "@/lib/copy";
-import { canAddMore, canFind, enrollReducer, initialEnroll } from "@/lib/enrollState";
+import { canAddMore, canFind, enrollReducer, initialEnroll, remainingSelfies } from "@/lib/enrollState";
 import { preprocessFile } from "@/lib/preprocess";
 
 export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
@@ -12,7 +12,8 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
 
   async function handleFiles(list: FileList | null) {
     if (!list?.length) return;
-    const files = Array.from(list).slice(0, 5);
+    const files = Array.from(list).slice(0, remainingSelfies(state));
+    if (!files.length) return;
     dispatch({ type: "submit", names: files.map((f) => f.name) });
     const form = new FormData();
     for (let i = 0; i < files.length; i++) {
@@ -30,29 +31,33 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
     dispatch({ type: "success", userId: body.userId, faces: body.faces });
   }
 
+  const remaining = remainingSelfies(state);
+
   return (
     <div data-testid="enroll">
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => canAddMore(state) && inputRef.current?.click()}
-        onKeyDown={(e) => e.key === "Enter" && canAddMore(state) && inputRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          if (canAddMore(state)) void handleFiles(e.dataTransfer.files);
-        }}
-        style={{
-          border: "1px dashed var(--border)",
-          borderRadius: 8,
-          padding: "28px 20px",
-          textAlign: "center",
-          color: "var(--muted)",
-          cursor: canAddMore(state) ? "pointer" : "default",
-        }}
-      >
-        {state.chips.length === 0 ? COPY.enrollDrop : COPY.enrollMore}
-      </div>
+      {remaining > 0 && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => canAddMore(state) && inputRef.current?.click()}
+          onKeyDown={(e) => e.key === "Enter" && canAddMore(state) && inputRef.current?.click()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (canAddMore(state)) void handleFiles(e.dataTransfer.files);
+          }}
+          style={{
+            border: "1px dashed var(--border)",
+            borderRadius: 8,
+            padding: "28px 20px",
+            textAlign: "center",
+            color: "var(--muted)",
+            cursor: canAddMore(state) ? "pointer" : "default",
+          }}
+        >
+          {state.chips.length === 0 ? COPY.enrollDrop : `Add up to ${remaining} more. ${COPY.enrollMoreHint}`}
+        </div>
+      )}
       <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={(e) => void handleFiles(e.target.files)} />
 
       {state.chips.length > 0 && (
