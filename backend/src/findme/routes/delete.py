@@ -26,8 +26,17 @@ async def remove_album(
 async def link_venue(album_id: str, request: Request, x_owner_token: str | None = Header(default=None)):
     body = await request.json()
     venue = body.get("venue")
+    if not venue and body.get("placeId"):
+        import httpx
+
+        from findme.places import details
+
+        async with httpx.AsyncClient() as client:
+            venue = await details(client, body["placeId"], body.get("session", "no-session"))
+        if venue is None:
+            raise ApiError("UPSTREAM_FACE_ENGINE", "Place lookup failed; retry.")
     if not venue or not all(k in venue for k in ("label", "lat", "lon")):
-        raise ApiError("UNSUPPORTED_MEDIA", "venue requires label, lat, lon.")
+        raise ApiError("UNSUPPORTED_MEDIA", "venue requires placeId or label, lat, lon.")
     venue["source"] = "user"
     meta = set_venue(request.app.state.root, album_id, x_owner_token, venue)
     return {"venue": meta["venue"]}

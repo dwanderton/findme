@@ -6,6 +6,7 @@ import { Backdrop } from "@/components/Backdrop";
 import { Enroll } from "@/components/Enroll";
 import { Progress } from "@/components/Progress";
 import { AlbumActions, Results } from "@/components/Results";
+import { VenueLink } from "@/components/Venue";
 import { Upload } from "@/components/Upload";
 import { COPY } from "@/lib/copy";
 
@@ -16,6 +17,8 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
   const [servedTiles] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [venue, setVenue] = useState<{ label: string; lat: number; lon: number; source: string } | null>(null);
+  const [gps, setGps] = useState<{ withGps: number; total: number } | undefined>(undefined);
 
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px", position: "relative" }}>
@@ -28,14 +31,17 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
       </h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
         <Upload albumId={albumId} onCommitted={() => setCommitted(true)} onTiles={setTiles} />
-        {committed && <Progress albumId={albumId} onReady={() => setReady(true)} />}
+        {committed && <Progress albumId={albumId} onReady={(s) => { setReady(true); setGps(s.gpsCoverage); }} />}
         <Enroll onFind={(uid) => setUserId(uid)} />
         {userId && !ready && (
           <p className="mono" style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
             enrolled {userId.slice(0, 8)} · waiting for index
           </p>
         )}
-        {userId && ready && <Results albumId={albumId} userId={userId} onThumbs={() => {}} />}
+        {ready && (venue || (gps && gps.withGps / Math.max(gps.total, 1) < 0.2)) && (
+          <VenueLink albumId={albumId} venue={venue} onChange={setVenue} />
+        )}
+        {userId && ready && <Results key={venue?.label ?? "none"} albumId={albumId} userId={userId} onThumbs={() => {}} />}
         <AlbumActions albumId={albumId} userId={userId} />
       </div>
     </main>
