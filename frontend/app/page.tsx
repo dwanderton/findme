@@ -6,11 +6,66 @@ import { useState } from "react";
 import { createAlbum } from "@/lib/api";
 import { COPY } from "@/lib/copy";
 
-const FEATURES = [
-  ["FACE SEARCH", "SCRFD + ArcFace on Runpod serverless GPUs. Upload a selfie, find every photo you are in."],
-  ["LOCATION", "EXIF GPS resolved to a place and plotted on a map for each match."],
-  ["WEATHER", "The conditions at the moment each photo was taken, from Open-Meteo."],
-  ["CAPTIONS", "Qwen2.5-VL writes a caption and tags for every match."],
+function Ext({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      style={{ color: "var(--primary-text)", textDecoration: "underline", textUnderlineOffset: 2 }}
+    >
+      {children}
+    </a>
+  );
+}
+
+const FEATURES: [string, React.ReactNode][] = [
+  [
+    "FACE SEARCH",
+    <>
+      <Ext href="https://github.com/deepinsight/insightface/tree/master/detection/scrfd">SCRFD</Ext> +{" "}
+      <Ext href="https://arxiv.org/abs/1801.07698">ArcFace</Ext> on{" "}
+      <Ext href="https://docs.runpod.io/serverless/overview">Runpod serverless</Ext> GPUs. Upload a selfie, find every
+      photo you are in.
+    </>,
+  ],
+  [
+    "LOCATION",
+    <>
+      EXIF GPS resolved to a place with{" "}
+      <Ext href="https://developers.google.com/maps/documentation/geocoding">Google Geocoding</Ext> and plotted on a{" "}
+      <Ext href="https://developers.google.com/maps/documentation/maps-static">Google Static Map</Ext> for each match.
+    </>,
+  ],
+  [
+    "WEATHER",
+    <>
+      The conditions at the moment each photo was taken, from <Ext href="https://open-meteo.com">Open-Meteo</Ext>.
+    </>,
+  ],
+  [
+    "CAPTIONS",
+    <>
+      <Ext href="https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-AWQ">Qwen2.5-VL</Ext> writes a caption and tags for
+      every match.
+    </>,
+  ],
+  [
+    "RUNPOD",
+    <>
+      All compute runs on <Ext href="https://www.runpod.io">Runpod</Ext>: a load-balanced GPU endpoint for face
+      detection, embedding, and the map proxy, plus a queue endpoint serving the VLM. Flex workers scale to zero
+      between albums.
+    </>,
+  ],
+  [
+    "FRONTEND",
+    <>
+      A <Ext href="https://nextjs.org">Next.js</Ext> app on <Ext href="https://vercel.com">Vercel</Ext> proxies every
+      request to Runpod: it injects the API key server-side, rate-limits per IP, and relays indexing progress over
+      SSE.
+    </>,
+  ],
 ];
 
 export default function Home() {
@@ -58,7 +113,7 @@ export default function Home() {
       </div>
 
       <p className="mono" style={{ color: "var(--muted)", marginTop: 28, fontSize: "0.68rem", textAlign: "center" }}>
-        face search on Runpod serverless · Google Geocoding + Open-Meteo · Qwen2.5-VL captions
+        face search on Runpod serverless
       </p>
     </main>
   );
