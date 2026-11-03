@@ -23,7 +23,7 @@
     "@types/react-dom": "latest",
     "happy-dom": "^21.0.4",
     "openapi-typescript": "latest",
-    "typescript": "latest",
+    "typescript": "^7.0.2",
     "vitest": "latest"
   }
 }
