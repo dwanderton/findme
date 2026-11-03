@@ -1,0 +1,48 @@
+direction: right
+
+vars: {
+  d2-config: {
+    theme-id: 200
+    layout-engine: elk
+  }
+}
+
+classes: {
+  ext: {
+    style: {
+      stroke-dash: 3
+      font-size: 14
+    }
+  }
+}
+
+browser: Browser {
+  shape: rectangle
+}
+
+vercel: Vercel {
+  proxy: "Next.js app + /api proxy\nrate limit · SSE relay"
+}
+
+runpod: Runpod Serverless {
+  api: "findme-api (LB, GPU)\nFastAPI · SCRFD + ArcFace\nscale to zero"
+  vlm: "vlm (queue, GPU)\nQwen2.5-VL captions"
+  volume: "network volume\nVLM weight cache" {
+    shape: cylinder
+  }
+
+  api <-> vlm: caption requests
+  vlm <-> volume: weights
+}
+
+google: "Google Maps APIs\ngeocoding · places · static maps" {
+  class: ext
+}
+meteo: "Open-Meteo\nweather at taken-at time" {
+  class: ext
+}
+
+browser <-> vercel.proxy: HTTPS
+vercel.proxy <-> runpod.api: "Bearer RUNPOD_API_KEY"
+runpod.api <-> google
+runpod.api <-> meteo
