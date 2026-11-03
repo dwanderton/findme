@@ -46,30 +46,54 @@ function ResultsSkeleton() {
   );
 }
 
+const STATUS_RETRY_MS = [2_000, 5_000, 10_000];
+
 export default function AlbumPage({ params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = use(params);
   const [committed, setCommitted] = useState<boolean | null>(null);
+  const [statusFailed, setStatusFailed] = useState(false);
+  const [statusNonce, setStatusNonce] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem(`user:${albumId}`);
     if (storedUser) setUserId(storedUser);
     setOwner(localStorage.getItem(`owner:${albumId}`));
-    void fetch(`/api/albums/${albumId}/status`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => {
-        if (!s) {
-          setCommitted(false);
+    let cancelled = false;
+    async function loadStatus(attempt = 0) {
+      let s: {
+        stage: string;
+        gpsCoverage: { withGps: number; total: number };
+        venue: { label: string; lat: number; lon: number; source: string } | null;
+      } | null = null;
+      try {
+        const r = await fetch(`/api/albums/${albumId}/status`);
+        if (r.status === 404) {
+          if (!cancelled) setCommitted(false);
           return;
         }
-        setCommitted(s.stage !== "received");
-        if (s.stage === "ready") {
-          setReady(true);
-          setGps(s.gpsCoverage);
-        }
-        if (s.venue) setVenue(s.venue);
-      })
-      .catch(() => setCommitted(false));
-  }, [albumId]);
+        if (!r.ok) throw new Error(String(r.status));
+        s = await r.json();
+      } catch {
+        if (cancelled) return;
+        const delay = STATUS_RETRY_MS[attempt];
+        if (delay !== undefined) setTimeout(() => void loadStatus(attempt + 1), delay);
+        else setStatusFailed(true);
+        return;
+      }
+      if (cancelled || !s) return;
+      setStatusFailed(false);
+      setCommitted(s.stage !== "received");
+      if (s.stage === "ready") {
+        setReady(true);
+        setGps(s.gpsCoverage);
+      }
+      if (s.venue) setVenue(s.venue);
+    }
+    void loadStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [albumId, statusNonce]);
   const [tiles, setTiles] = useState<string[]>([]);
   const [servedTiles, setServedTiles] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -96,6 +120,28 @@ export default function AlbumPage({ params }: { params: Promise<{ albumId: strin
         </span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {committed === null && !statusFailed && (
+          <section className="card card-in" data-testid="album-skeleton">
+            <span className="mono" style={cardLabel}>1 · ALBUM</span>
+            <div className="skeleton" style={{ width: "55%", height: 14 }} />
+            <div className="skeleton" style={{ width: "100%", height: 110, marginTop: 10 }} />
+          </section>
+        )}
+        {statusFailed && (
+          <section className="card card-in">
+            <p className="mono" style={{ color: "var(--status-error)", fontSize: "0.8rem" }}>{COPY.albumLoadFailed}</p>
+            <button
+              className="ghost"
+              style={{ marginTop: 10 }}
+              onClick={() => {
+                setStatusFailed(false);
+                setStatusNonce((n) => n + 1);
+              }}
+            >
+              retry
+            </button>
+          </section>
+        )}
         {committed === false && (
           <section className="card card-in">
             <span className="mono" style={cardLabel}>1 · ALBUM</span>

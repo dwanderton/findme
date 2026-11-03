@@ -23,6 +23,7 @@ export const COPY = {
   noGps: "no GPS in file",
   weatherFailed: "weather lookup failed. retry",
   captionPending: "caption generating…",
+  albumLoadFailed: "Could not load this album.",
   venuePrompt: "Link a venue to enable place and weather enrichment.",
   venueUnavailable: "venue search unavailable. retry",
   shareDisclosure: "anyone with this link can search this album for themselves",
