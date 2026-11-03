@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EtaTracker, shouldDowngrade, stageViews } from "../progressClient";
+import { EtaTracker, shouldDowngrade, stageViews, watchProgress } from "../progressClient";
 
 describe("EtaTracker gates", () => {
   it("not confident before ten seconds of samples", () => {
@@ -46,5 +46,84 @@ describe("downgrade", () => {
   it("after two sse failures", () => {
     expect(shouldDowngrade(1)).toBe(false);
     expect(shouldDowngrade(2)).toBe(true);
+  });
+});
+
+/* happy-dom has no EventSource, so watchProgress takes the polling path —
+ * the lifecycle rules under test are transport-independent. */
+describe("watchProgress lifecycle", () => {
+  const handlers = () => ({ onSnapshot: vi.fn(), onDone: vi.fn(), onFailed: vi.fn() });
+  let hidden = false;
+
+  const setHidden = (value: boolean) => {
+    hidden = value;
+    document.dispatchEvent(new Event("visibilitychange"));
+  };
+
+  const respond = (stage: string) =>
+    vi.fn(async () => ({ ok: true, json: async () => ({ stage, photosDone: 0, photosTotal: 1 }) }));
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    hidden = false;
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("does not open a transport while the tab is hidden, resumes when visible", async () => {
+    const fetchMock = respond("embedding");
+    vi.stubGlobal("fetch", fetchMock);
+    hidden = true;
+    const stop = watchProgress("a1", handlers());
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(fetchMock).not.toHaveBeenCalled();
+    setHidden(false);
+    await vi.advanceTimersByTimeAsync(4_000);
+    expect(fetchMock).toHaveBeenCalled();
+    stop();
+  });
+
+  it("pauses polling when the tab goes hidden", async () => {
+    const fetchMock = respond("embedding");
+    vi.stubGlobal("fetch", fetchMock);
+    const stop = watchProgress("a1", handlers());
+    await vi.advanceTimersByTimeAsync(4_000);
+    const callsWhileVisible = fetchMock.mock.calls.length;
+    expect(callsWhileVisible).toBeGreaterThan(0);
+    setHidden(true);
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(fetchMock.mock.calls.length).toBe(callsWhileVisible);
+    stop();
+  });
+
+  it("stops for good on a terminal snapshot, even across visibility changes", async () => {
+    const fetchMock = respond("ready");
+    vi.stubGlobal("fetch", fetchMock);
+    const h = handlers();
+    const stop = watchProgress("a1", h);
+    await vi.advanceTimersByTimeAsync(2_100);
+    expect(h.onDone).toHaveBeenCalledTimes(1);
+    const callsAtTerminal = fetchMock.mock.calls.length;
+    setHidden(true);
+    setHidden(false);
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(fetchMock.mock.calls.length).toBe(callsAtTerminal);
+    stop();
+  });
+
+  it("failed snapshot routes to onFailed and stops", async () => {
+    const fetchMock = respond("failed");
+    vi.stubGlobal("fetch", fetchMock);
+    const h = handlers();
+    const stop = watchProgress("a1", h);
+    await vi.advanceTimersByTimeAsync(2_100);
+    expect(h.onFailed).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(fetchMock.mock.calls.length).toBe(1);
+    stop();
   });
 });
