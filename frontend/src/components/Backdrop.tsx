@@ -46,11 +46,11 @@ export function Backdrop({
           display: flex;
           gap: 1.2vw;
           transform: rotate(-3.5deg) scale(1.08);
-          opacity: 0.62;
+          opacity: 0.85;
           transition: opacity 1.2s ease;
           overflow: hidden;
         }
-        .marquee.dimmed { opacity: 0.2; }
+        .marquee.dimmed { opacity: 0.38; }
         .mq-col {
           flex: 1;
           display: flex;
@@ -72,7 +72,7 @@ export function Backdrop({
           aspect-ratio: 3 / 2;
           object-fit: cover;
           border-radius: 4px;
-          filter: grayscale(0.3) contrast(0.95) brightness(0.72);
+          filter: grayscale(0.3) contrast(0.95) brightness(0.8);
         }
         .mq-veil {
           position: fixed;
