@@ -17,3 +17,4 @@ playwright-report/
 dist/
 *.egg-info/
 backend/.flash/
+frontend/tsconfig.tsbuildinfo

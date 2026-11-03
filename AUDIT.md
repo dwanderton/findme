@@ -63,3 +63,17 @@ across tsx/ts: zero violations outside the lint definitions themselves.
 Live deploy pending two credentials (see DEPLOY.md): RUNPOD_API_KEY,
 GOOGLE_MAPS_API_KEY. The deployed smoke run (cold start, GPU provider line,
 throughput) completes the final gates.
+
+## Addendum (2026-11-02, post-polish pass)
+
+- Deps: TypeScript 7.0.2 (major, clean), python-dateutil 4.x; everything else
+  already latest. npm audit: 3 moderate (minimatch DoS) confined to
+  openapi-typescript's dev-only chain; no runtime exposure; npm's forced fix
+  would downgrade a major, declined. Revisit when @redocly/openapi-core bumps.
+- Social surface: icon.svg + apple-icon.png + dynamic OG image (next/og,
+  verified 200 image/png), metadataBase, twitter card.
+- Design re-audit after UX changes: progress now a single current-stage line
+  with pulsing running dot (motion-as-state, exactly one visible status);
+  upload dropzone unmounts at commit (no dead UI); backdrop raised to
+  visible contrast while keeping content legible under the gradient. Voice
+  lint still green; no em dashes or emoji in shipped strings.
