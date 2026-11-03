@@ -95,6 +95,7 @@ async def find(request: Request, userId: str, albumId: str, threshold: str = "st
                     "thumbUrl": f"/photos/{photo_id}?userId={userId}&albumId={albumId}&thumb=true",
                     "fullUrl": f"/photos/{photo_id}?userId={userId}&albumId={albumId}",
                     "takenAt": exif.taken_at,
+                    "fileModified": exif.file_modified,
                     "camera": clean(camera_panel(exif)),
                     "place": clean(enriched.place),
                     "weather": clean(enriched.weather),

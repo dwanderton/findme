@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { BATCH_MAX_BYTES, BATCH_MAX_PHOTOS, normalizeExif, planBatches } from "../preprocess";
+import { BATCH_MAX_BYTES, BATCH_MAX_PHOTOS, localIso, normalizeExif, planBatches } from "../preprocess";
 
 const item = (size: number) => ({ blob: { size } });
 
@@ -24,6 +24,18 @@ describe("planBatches", () => {
 
   it("empty input", () => {
     expect(planBatches([])).toEqual([]);
+  });
+});
+
+describe("localIso", () => {
+  it("formats epoch millis as local datetime-local value", () => {
+    const v = localIso(Date.UTC(2026, 5, 1, 12, 0, 0));
+    expect(v).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+  });
+
+  it("rejects zero and NaN", () => {
+    expect(localIso(0)).toBeUndefined();
+    expect(localIso(Number.NaN)).toBeUndefined();
   });
 });
 

@@ -3,6 +3,7 @@ export type ClientExif = {
   lat?: number;
   lon?: number;
   taken_at?: string;
+  file_modified?: string;
   make?: string;
   model?: string;
   lens?: string;
@@ -65,6 +66,12 @@ export function normalizeExif(raw: Record<string, unknown> | null | undefined): 
   return empty ? null : exif;
 }
 
+export function localIso(epochMs: number): string | undefined {
+  if (!Number.isFinite(epochMs) || epochMs <= 0) return undefined;
+  const d = new Date(epochMs - new Date(epochMs).getTimezoneOffset() * 60_000);
+  return d.toISOString().slice(0, 19);
+}
+
 export async function preprocessFile(file: File): Promise<PreppedPhoto> {
   let exif: ClientExif | null = null;
   try {
@@ -72,6 +79,10 @@ export async function preprocessFile(file: File): Promise<PreppedPhoto> {
     exif = normalizeExif(await exifr.parse(file, { gps: true, exif: true }));
   } catch {
     exif = null;
+  }
+  const fileModified = localIso(file.lastModified);
+  if (fileModified) {
+    exif = { ...(exif ?? { gps_present: false }), file_modified: fileModified };
   }
   const blob = await resizeToJpeg(file);
   return { name: file.name, blob, exif };

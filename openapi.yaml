@@ -795,6 +795,9 @@ components:
           type: string
         takenAt:
           type: string
+        fileModified:
+          type: string
+          description: file created/modified timestamp captured at upload; prefill for user timestamps
         camera:
           $ref: '#/components/schemas/Camera'
         place:

@@ -358,6 +358,8 @@ export interface components {
             thumbUrl: string;
             fullUrl: string;
             takenAt?: string;
+            /** @description file created/modified timestamp captured at upload; prefill for user timestamps */
+            fileModified?: string;
             camera: components["schemas"]["Camera"];
             place: components["schemas"]["Place"];
             weather: components["schemas"]["Weather"];

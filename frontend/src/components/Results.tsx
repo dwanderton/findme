@@ -156,9 +156,9 @@ const cardLabel: React.CSSProperties = {
   marginBottom: 8,
 };
 
-function TimestampForm({ albumId, photoId, onSaved }: { albumId: string; photoId: string; onSaved: () => void }) {
+function TimestampForm({ albumId, photoId, initial, onSaved }: { albumId: string; photoId: string; initial?: string; onSaved: () => void }) {
   const [owner, setOwner] = useState<string | null>(null);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initial?.slice(0, 16) ?? "");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -206,7 +206,9 @@ function WeatherCard({ m, albumId, onRefresh }: { m: Match; albumId: string; onR
     return (
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{weatherLine(w)}</p>
-        {w.reason === "no-timestamp" && <TimestampForm albumId={albumId} photoId={m.photoId} onSaved={onRefresh} />}
+        {w.reason === "no-timestamp" && (
+          <TimestampForm albumId={albumId} photoId={m.photoId} initial={m.fileModified} onSaved={onRefresh} />
+        )}
       </div>
     );
   }
