@@ -1,4 +1,7 @@
-# findMe
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/findme-logo.png">
+  <img src="assets/findme-logo-black.png" alt="findMe" width="420">
+</picture>
 
 **Using an agent?** Copy-paste the below text to your agent:
 
