@@ -22,7 +22,7 @@ export function Enroll({ onFind }: { onFind: (userId: string) => void }) {
     }
     const isAppend = state.userId !== null;
     if (isAppend) form.set("userId", state.userId!);
-    const r = await fetch("/api/enroll", { method: isAppend ? "PATCH" : "POST", body: form });
+    const r = await fetch("/api/enroll", { method: isAppend ? "PUT" : "POST", body: form });
     const body = await r.json().catch(() => null);
     if (!r.ok) {
       dispatch({ type: "failure", message: body?.error?.message ?? COPY.noFace, selfie: body?.error?.selfie });

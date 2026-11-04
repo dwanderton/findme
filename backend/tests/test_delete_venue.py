@@ -33,6 +33,14 @@ def test_venue_link_unlink_owner_gated(ctx):
     assert r.status_code == 204
 
 
+def test_venue_put_alias(ctx):
+    # The Runpod LB gateway can drop PATCH, so the frontend sends PUT.
+    _, client, album_id, token = ctx
+    r = client.put(f"/albums/{album_id}/venue", json={"venue": VENUE}, headers={"X-Owner-Token": token})
+    assert r.status_code == 200
+    assert r.json()["venue"]["source"] == "user"
+
+
 def test_photo_timestamp_owner_gated(ctx):
     root, client, album_id, token = ctx
     from findme.albums import load_meta

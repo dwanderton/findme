@@ -47,7 +47,8 @@ async def enroll(request: Request):
     return {"userId": user_id, "faces": faces}
 
 
-@router.patch("/enroll")
+# PUT alongside PATCH: some Runpod LB gateways drop PATCH before it reaches the worker.
+@router.api_route("/enroll", methods=["PATCH", "PUT"])
 async def enroll_append(request: Request):
     root = request.app.state.root
     form = await request.form()

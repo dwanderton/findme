@@ -171,7 +171,7 @@ function TimestampForm({ albumId, photoId, initial, onSaved }: { albumId: string
     setBusy(true);
     setFailed(false);
     const r = await fetch(`/api/albums/${albumId}/photos/${photoId}/timestamp`, {
-      method: "PATCH",
+      method: "PUT",
       headers: { "content-type": "application/json", "x-owner-token": owner! },
       body: JSON.stringify({ takenAt: value }),
     }).catch(() => null);
