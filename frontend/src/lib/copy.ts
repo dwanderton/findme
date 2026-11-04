@@ -16,6 +16,7 @@ export const COPY = {
   stageEmbedding: "detecting + embedding",
   stageReady: "ready",
   coldStart: "GPU worker starting",
+  podWake: "please be patient while we find a pod to wake up",
   idleWake: "endpoints were idle. waking",
   rateLimited: "Too many requests. Retrying in",
   offline: "Connection lost. Retrying when back online.",

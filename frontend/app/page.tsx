@@ -76,15 +76,25 @@ export default function Home() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coldPool, setColdPool] = useState(false);
+  const [waking, setWaking] = useState(false);
 
   useEffect(() => {
     installFetchInterceptor();
-    void fetch("/api/warmup", { method: "POST" }).catch(() => {});
+    void fetch("/api/warmup", { method: "POST" })
+      .then((r) => r.json())
+      .then((b) => setColdPool(b?.status === "warming"))
+      .catch(() => {});
   }, []);
 
   async function start() {
     setBusy(true);
     setError(null);
+    // No warm pod means the create blocks on a cold start; say so instead
+    // of sitting on a silent spinner. The timer catches a pool that went
+    // cold after the page-load warmup check.
+    const slow = window.setTimeout(() => setWaking(true), 2500);
+    if (coldPool) setWaking(true);
     try {
       const album = await createAlbum(1);
       localStorage.setItem(`owner:${album.albumId}`, album.ownerToken);
@@ -92,6 +102,9 @@ export default function Home() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something failed.");
       setBusy(false);
+    } finally {
+      clearTimeout(slow);
+      setWaking(false);
     }
   }
 
@@ -133,6 +146,12 @@ export default function Home() {
             )}
           </button>
         </div>
+        {busy && waking && (
+          <p className="mono log-stream" style={{ color: "var(--status-pending)", marginTop: 16, fontSize: "0.8rem" }}>
+            <span className="dot running" style={{ marginRight: 8 }} />
+            {COPY.coldStart} · {COPY.podWake}
+          </p>
+        )}
         {error && (
           <p className="mono" style={{ color: "var(--status-error)", marginTop: 16, fontSize: "0.8rem" }}>
             {error}
