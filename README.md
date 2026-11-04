@@ -37,6 +37,19 @@ npm install && npm run dev   # http://localhost:3000
 The face engine runs on CPU locally (same models, same math as the GPU
 workers). Without a Google key, place and weather show as absent.
 
+## Try the demo set
+
+[demo-set/](demo-set/) holds 20 event photos and one query photo. The person
+in [face-to-find.jpg](demo-set/face-to-find.jpg) appears in half the album.
+
+1. Open the app (live, or local as above) and click **Create an album**.
+2. Click the upload area and select everything in `demo-set/photos/`
+   (or use "choose an entire folder").
+3. When indexing finishes, drop `demo-set/face-to-find.jpg` on the selfie
+   area and click **Find me**.
+4. Expect roughly 10 matches, each with place, weather, camera settings,
+   and a caption when the VLM is up.
+
 ## Tests
 
 ```bash
