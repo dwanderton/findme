@@ -35,7 +35,7 @@ test("core pathway: create, upload, index, enroll, find, panel, console", async 
     await page.evaluate(async (id) => {
       const owner = localStorage.getItem(`owner:${id}`);
       await fetch(`/api/albums/${id}/venue`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "content-type": "application/json", "x-owner-token": owner ?? "" },
         body: JSON.stringify({ venue: { label: "Shoreline Amphitheatre", lat: 37.4267, lon: -122.0806 } }),
       });

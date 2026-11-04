@@ -24,7 +24,8 @@ async def remove_album(
     return Response(status_code=204)
 
 
-@router.patch("/albums/{album_id}/venue")
+# PUT alongside PATCH: some Runpod LB gateways drop PATCH before it reaches the worker.
+@router.api_route("/albums/{album_id}/venue", methods=["PATCH", "PUT"])
 async def link_venue(album_id: str, request: Request, x_owner_token: str | None = Header(default=None)):
     body = await request.json()
     venue = body.get("venue")
@@ -47,7 +48,7 @@ async def link_venue(album_id: str, request: Request, x_owner_token: str | None 
     return {"venue": meta["venue"]}
 
 
-@router.patch("/albums/{album_id}/photos/{photo_id}/timestamp")
+@router.api_route("/albums/{album_id}/photos/{photo_id}/timestamp", methods=["PATCH", "PUT"])
 async def set_timestamp(
     album_id: str, photo_id: str, request: Request, x_owner_token: str | None = Header(default=None)
 ):

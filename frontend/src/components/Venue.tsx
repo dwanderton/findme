@@ -47,7 +47,7 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
     setBusy(true);
     setSuggestions([]);
     const r = await fetch(`/api/albums/${albumId}/venue`, {
-      method: "PATCH",
+      method: "PUT",
       headers: { "content-type": "application/json", "x-owner-token": owner },
       body: JSON.stringify({ placeId: s.placeId, session: session.current }),
     });
