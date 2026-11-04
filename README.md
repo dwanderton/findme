@@ -1,13 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/findme-logo.png">
-  <img src="assets/findme-logo-black.png" alt="findMe" width="420">
-</picture>
-
-**Using an agent?** Copy-paste the below text to your agent:
-
-```
-Deploy findMe by following every step in https://raw.githubusercontent.com/dwanderton/findme/main/AGENTS.md
-```
+<img src="assets/findme-logo-black.png" alt="findMe" width="420">
 
 Upload an album, enroll a selfie, get back every photo you appear in. Each
 match carries where it was taken (Google Geocoding), the weather at capture
@@ -89,6 +80,12 @@ cd frontend && npm run gen-types
 Regenerate: `d2 docs/architecture.d2 docs/architecture.svg`
 
 ## Deploy
+
+**Using an agent?** Copy-paste the below text to your agent:
+
+```
+Deploy findMe by following every step in https://raw.githubusercontent.com/dwanderton/findme/main/AGENTS.md
+```
 
 See [DEPLOY.md](DEPLOY.md) (includes the live resource map and the Runpod-side
 env table: VLM_BASE_URL, VLM_MODEL, RUNPOD_API_KEY on-worker, CORS_ORIGINS,
