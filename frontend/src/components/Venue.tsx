@@ -8,7 +8,19 @@ import { debounce } from "@/lib/debounce";
 type Suggestion = { placeId: string; label: string };
 type Venue = { label: string; lat: number; lon: number; source: string };
 
-export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue: Venue | null; onChange: (v: Venue | null) => void }) {
+export function VenueLink({
+  albumId,
+  venue,
+  onChange,
+  onSkip,
+  compact = false,
+}: {
+  albumId: string;
+  venue: Venue | null;
+  onChange: (v: Venue | null) => void;
+  onSkip?: () => void;
+  compact?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [highlight, setHighlight] = useState(0);
@@ -81,8 +93,17 @@ export function VenueLink({ albumId, venue, onChange }: { albumId: string; venue
   }
 
   return (
-    <div className="card" data-testid="venue-link">
-      <p className="mono" style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 8 }}>{COPY.venuePrompt}</p>
+    <div className={compact ? "" : "card"} data-testid="venue-link">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
+        <p className="mono" style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+          {compact ? COPY.venueAdd : COPY.venuePrompt}
+        </p>
+        {onSkip && (
+          <button className="ghost" data-testid="venue-skip" onClick={onSkip} style={{ flexShrink: 0 }}>
+            {COPY.venueSkip}
+          </button>
+        )}
+      </div>
       <input
         value={query}
         disabled={busy}
