@@ -27,6 +27,8 @@ export const COPY = {
   captionPending: "caption generating…",
   albumLoadFailed: "Could not load this album.",
   venuePrompt: "Link a venue to enable place and weather enrichment.",
+  venueSkip: "skip for now",
+  venueAdd: "add a location for place and weather",
   venueUnavailable: "venue search unavailable. retry",
   shareDisclosure: "anyone with this link can search this album for themselves",
   deleteConfirm: "Delete everything? Photos, face vectors and caches are erased.",

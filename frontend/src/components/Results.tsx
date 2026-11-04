@@ -42,7 +42,17 @@ export function Results({
   const [band, setBand] = useState<"strong" | "all">("all");
   const [tags, setTags] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [venueSkipped, setVenueSkipped] = useState(false);
   const attempts = useRef(0);
+
+  useEffect(() => {
+    setVenueSkipped(localStorage.getItem(`venueSkip:${albumId}`) === "1");
+  }, [albumId]);
+
+  function skipVenue() {
+    localStorage.setItem(`venueSkip:${albumId}`, "1");
+    setVenueSkipped(true);
+  }
 
   const load = useCallback(async () => {
     try {
@@ -108,8 +118,19 @@ export function Results({
         const noGps = current ? !current.place.present && current.place.reason === "no-gps" : false;
         return (
           <>
-            {(venue || noGps) && <VenueLink albumId={albumId} venue={venue} onChange={onVenueChange} />}
-            {current && <ExpandedPanel m={current} albumId={albumId} onRefresh={() => void load()} />}
+            {(venue || (noGps && !venueSkipped)) && (
+              <VenueLink albumId={albumId} venue={venue} onChange={onVenueChange} onSkip={venue ? undefined : skipVenue} />
+            )}
+            {current && (
+              <ExpandedPanel
+                m={current}
+                albumId={albumId}
+                onRefresh={() => void load()}
+                venue={venue}
+                venueSkipped={venueSkipped}
+                onVenueChange={onVenueChange}
+              />
+            )}
           </>
         );
       })()}
@@ -244,13 +265,36 @@ function WeatherCard({ m, albumId, onRefresh }: { m: Match; albumId: string; onR
   );
 }
 
-function LocationCard({ m, albumId }: { m: Match; albumId: string }) {
+function LocationCard({
+  m,
+  albumId,
+  venue,
+  venueSkipped,
+  onVenueChange,
+}: {
+  m: Match;
+  albumId: string;
+  venue: Venue | null;
+  venueSkipped: boolean;
+  onVenueChange: (v: Venue | null) => void;
+}) {
   const [mapsDown, setMapsDown] = useState(false);
   const hasMap = m.place.present && typeof m.place.lat === "number" && typeof m.place.lon === "number";
   if (!hasMap) {
+    // After "skip for now" the map box itself becomes the place to add a
+    // location, the way the weather box offers the timestamp form.
+    const offerAdd = venueSkipped && !venue && m.place.reason === "no-gps";
     return (
-      <div className="card card-in" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 230 }}>
+      <div
+        className="card card-in"
+        style={{ display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 230, ...(offerAdd ? {} : { alignItems: "center" }) }}
+      >
         <p className="mono" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>{placeLine(m.place)}</p>
+        {offerAdd && (
+          <div style={{ marginTop: 10 }}>
+            <VenueLink albumId={albumId} venue={venue} onChange={onVenueChange} compact />
+          </div>
+        )}
       </div>
     );
   }
@@ -290,7 +334,21 @@ function LocationCard({ m, albumId }: { m: Match; albumId: string }) {
   );
 }
 
-function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; onRefresh: () => void }) {
+function ExpandedPanel({
+  m,
+  albumId,
+  onRefresh,
+  venue,
+  venueSkipped,
+  onVenueChange,
+}: {
+  m: Match;
+  albumId: string;
+  onRefresh: () => void;
+  venue: Venue | null;
+  venueSkipped: boolean;
+  onVenueChange: (v: Venue | null) => void;
+}) {
   const camera = cameraParts(m.camera);
   return (
     <div
@@ -316,7 +374,7 @@ function ExpandedPanel({ m, albumId, onRefresh }: { m: Match; albumId: string; o
 
       <WeatherCard m={m} albumId={albumId} onRefresh={onRefresh} />
 
-      <LocationCard m={m} albumId={albumId} />
+      <LocationCard m={m} albumId={albumId} venue={venue} venueSkipped={venueSkipped} onVenueChange={onVenueChange} />
 
       <div className="card card-in" style={{ minHeight: 230, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {camera.length > 0 && (
